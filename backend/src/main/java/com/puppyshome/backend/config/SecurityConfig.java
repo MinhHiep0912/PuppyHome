@@ -14,14 +14,17 @@ public class SecurityConfig {
             HttpSecurity http
     ) throws Exception {
 
-        http.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/health",
-                        "/api/services"
-                ).permitAll()
-                .anyRequest().denyAll()
-        );
+        http
+                .csrf(csrf -> csrf.spa())
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/health",
+                                "/api/services",
+                                "/api/auth/csrf"
+                        ).permitAll()
+                        .anyRequest().denyAll()
+                );
 
         return http.build();
     }
