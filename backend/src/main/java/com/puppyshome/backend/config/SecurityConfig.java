@@ -21,41 +21,40 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            SecurityContextRepository securityContextRepository
-    ) throws Exception {
+            SecurityContextRepository securityContextRepository) throws Exception {
 
         http
                 .csrf(csrf -> csrf.spa())
-                .securityContext(context ->
-                        context.securityContextRepository(
-                                securityContextRepository
-                        )
-                )
-                .exceptionHandling(exceptions ->
-                        exceptions.authenticationEntryPoint(
-                                (request, response, exception) ->
-                                        response.sendError(
-                                                HttpServletResponse.SC_UNAUTHORIZED
-                                        )
-                        )
-                )
+                .securityContext(context -> context.securityContextRepository(
+                        securityContextRepository))
+                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(
+                        (request, response, exception) -> response.sendError(
+                                HttpServletResponse.SC_UNAUTHORIZED)))
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID")
+                        .logoutSuccessHandler(
+                                (request, response, authentication) -> response.setStatus(
+                                        HttpServletResponse.SC_NO_CONTENT)))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/health",
                                 "/api/services",
-                                "/api/auth/csrf"
-                        ).permitAll()
+                                "/api/auth/csrf")
+                        .permitAll()
                         .requestMatchers(
-                            HttpMethod.GET,
-                            "/api/auth/me"
-                        ).authenticated()
+                                HttpMethod.GET,
+                                "/api/auth/me")
+                        .authenticated()
                         .requestMatchers(
                                 HttpMethod.POST,
-                                "/api/auth/login"
-                        ).permitAll()
-                        .anyRequest().denyAll()
-                );
+                                "/api/auth/login",
+                                "/api/auth/logout")
+                        .permitAll()
+                        .anyRequest().denyAll());
 
         return http.build();
     }
