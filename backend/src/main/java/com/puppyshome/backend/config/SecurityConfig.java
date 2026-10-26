@@ -5,23 +5,40 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
+    SecurityContextRepository securityContextRepository() {
+        return new HttpSessionSecurityContextRepository();
+    }
+
+    @Bean
     SecurityFilterChain securityFilterChain(
-            HttpSecurity http
+            HttpSecurity http,
+            SecurityContextRepository securityContextRepository
     ) throws Exception {
 
         http
                 .csrf(csrf -> csrf.spa())
+                .securityContext(context ->
+                        context.securityContextRepository(
+                                securityContextRepository
+                        )
+                )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/health",
                                 "/api/services",
                                 "/api/auth/csrf"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/auth/login"
                         ).permitAll()
                         .anyRequest().denyAll()
                 );
