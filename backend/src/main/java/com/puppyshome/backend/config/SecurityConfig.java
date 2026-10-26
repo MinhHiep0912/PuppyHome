@@ -1,5 +1,7 @@
 package com.puppyshome.backend.config;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -29,6 +31,14 @@ public class SecurityConfig {
                                 securityContextRepository
                         )
                 )
+                .exceptionHandling(exceptions ->
+                        exceptions.authenticationEntryPoint(
+                                (request, response, exception) ->
+                                        response.sendError(
+                                                HttpServletResponse.SC_UNAUTHORIZED
+                                        )
+                        )
+                )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -36,6 +46,10 @@ public class SecurityConfig {
                                 "/api/services",
                                 "/api/auth/csrf"
                         ).permitAll()
+                        .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/auth/me"
+                        ).authenticated()
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/auth/login"
