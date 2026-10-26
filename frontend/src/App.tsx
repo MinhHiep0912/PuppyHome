@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { Service } from "./features/service-catalog/service";
 import { getPublishedServices } from "./features/service-catalog/serviceApi";
+import { useAuth } from "./features/auth/useAuth";
+import { AdminLoginForm } from "./features/auth/AdminLoginForm";
 import "./App.css";
 
 function App() {
@@ -8,6 +10,15 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
+  const {
+    admin,
+    isCheckingSession,
+    error: authError,
+    login,
+    logout,
+  } = useAuth();
+
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +58,18 @@ function App() {
     };
   }, [retryKey]);
 
+  async function handleLogout(): Promise<void> {
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+    } catch {
+      // useAuth đã lưu lỗi; giữ trạng thái phiên hiện tại nếu thất bại.
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
+
   return (
     <div className="app">
       <header className="site-header">
@@ -59,8 +82,58 @@ function App() {
           </span>
         </a>
 
-        <span className="site-header__tagline">Danh mục dịch vụ</span>
+        <div className="site-header__account" aria-live="polite">
+          <span className="site-header__tagline">
+            {isCheckingSession
+              ? "Đang kiểm tra phiên quản trị..."
+              : authError
+                ? "Không thể kiểm tra phiên quản trị"
+                : admin
+                  ? `Đã đăng nhập: ${admin.username}`
+                  : "Chưa đăng nhập quản trị"}
+          </span>
+
+          {authError && (
+            <span className="site-header__auth-error" role="status">
+              {authError}
+            </span>
+          )}
+        </div>
       </header>
+
+      {!isCheckingSession && !admin && (
+        <AdminLoginForm onLogin={login} error={authError} />
+      )}
+
+      {admin && (
+        <section
+          className="admin-session-panel"
+          aria-labelledby="admin-session-heading"
+        >
+          <div>
+            <h2 id="admin-session-heading">Khu vực quản trị</h2>
+
+            <p>
+              Đang đăng nhập với tài khoản <strong>{admin.username}</strong>.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="admin-logout-button"
+            disabled={isLoggingOut}
+            onClick={() => void handleLogout()}
+          >
+            {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+          </button>
+
+          {authError && (
+            <p className="admin-auth-error" role="alert">
+              {authError}
+            </p>
+          )}
+        </section>
+      )}
 
       <main className="main-content">
         <section className="intro">
