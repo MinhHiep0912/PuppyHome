@@ -54,6 +54,10 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/logout")
                         .permitAll()
+                        .requestMatchers(
+                                "/api/admin/services",
+                                "/api/admin/services/**")
+                        .hasRole("ADMIN")
                         .anyRequest().denyAll());
 
         return http.build();

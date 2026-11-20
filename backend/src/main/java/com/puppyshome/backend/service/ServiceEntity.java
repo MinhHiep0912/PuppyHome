@@ -42,24 +42,50 @@ public class ServiceEntity {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
-    @Column(
-        name = "created_at",
-        nullable = false,
-        insertable = false,
-        updatable = false
-    )
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(
-        name = "updated_at",
-        nullable = false,
-        insertable = false,
-        updatable = false
-    )
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
     protected ServiceEntity() {
         // Constructor không tham số dành cho JPA.
+    }
+
+    ServiceEntity(
+            String name,
+            String slug,
+            String shortDescription,
+            String description,
+            String imageUrl,
+            String status,
+            int sortOrder) {
+        this.name = name;
+        this.slug = slug;
+        this.shortDescription = shortDescription;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.status = status;
+        this.sortOrder = sortOrder;
+    }
+
+    void updateDetails(
+            String name,
+            String slug,
+            String shortDescription,
+            String description,
+            String imageUrl,
+            int sortOrder) {
+        this.name = name;
+        this.slug = slug;
+        this.shortDescription = shortDescription;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.sortOrder = sortOrder;
+    }
+
+    void updateStatus(String status) {
+        this.status = status;
     }
 
     public Long getId() {
