@@ -42,52 +42,46 @@ class PublicServiceApiIntegrationTests {
                 "Integration Test Published Service",
                 publishedSlug,
                 "PUBLISHED",
-                100
-        );
+                100);
 
         insertService(
                 "Integration Test Draft Service",
                 draftSlug,
                 "DRAFT",
-                101
-        );
+                101);
 
         mockMvc.perform(get("/api/services"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
-                        containsString(publishedSlug)
-                ))
+                        containsString(publishedSlug)))
                 .andExpect(content().string(
-                        not(containsString(draftSlug))
-                ));
+                        not(containsString(draftSlug))));
     }
 
     private void insertService(
             String name,
             String slug,
             String status,
-            int sortOrder
-    ) {
+            int sortOrder) {
         jdbcTemplate.update(
                 """
-                INSERT INTO services (
-                    name,
-                    slug,
-                    short_description,
-                    description,
-                    image_url,
-                    status,
-                    sort_order
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
+                        INSERT INTO services (
+                            name,
+                            slug,
+                            short_description,
+                            description,
+                            image_url,
+                            status,
+                            sort_order
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
                 name,
                 slug,
                 "Test description",
                 "Integration test data",
                 null,
                 status,
-                sortOrder
-        );
+                sortOrder);
     }
 }
