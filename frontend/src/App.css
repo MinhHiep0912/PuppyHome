@@ -1,7 +1,102 @@
+:root {
+  /* Bảng màu xanh nước biển nhạt */
+  --sky-50: #f0f9ff;
+  --sky-100: #e0f2fe;
+  --sky-200: #bae6fd;
+  --sky-300: #7dd3fc;
+  --sky-400: #38bdf8;
+  --sky-500: #0ea5e9;
+  --sky-600: #0284c7;
+  --sky-800: #075985;
+  --sky-900: #0c4a6e;
+
+  /* Văn bản */
+  --text-strong: #0c4a6e;
+  --text-body: #1e4e6b;
+  --text-muted: #4a7291;
+  --text-on-primary: #ffffff;
+
+  /* Hiệu ứng kính */
+  --glass-bg: rgba(255, 255, 255, 0.28);
+  --glass-bg-strong: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 32px rgba(14, 165, 233, 0.18);
+  --glass-blur: blur(16px) saturate(160%);
+  --glass-radius: 20px;
+
+  --danger: #b42318;
+}
+
+/* Trình duyệt không hỗ trợ backdrop-filter: dùng nền đục hơn để giữ độ đọc */
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-bg-strong: rgba(255, 255, 255, 0.92);
+  }
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--sky-100);
+}
+
+/* ---------- Khung chính ---------- */
+
 .app {
-  display: flex;
+  position: relative;
   min-height: 100vh;
-  flex-direction: column;
+  isolation: isolate;
+  overflow-x: hidden;
+  color: var(--text-body);
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 45%, #7dd3fc 100%);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+/* Các quầng sáng mờ phía sau tạo chiều sâu cho lớp kính */
+.app::before,
+.app::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.app::before {
+  top: -120px;
+  left: -100px;
+  width: 420px;
+  height: 420px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.app::after {
+  right: -120px;
+  bottom: -80px;
+  width: 480px;
+  height: 480px;
+  background: rgba(56, 189, 248, 0.45);
+}
+
+/* ---------- Glass dùng chung ---------- */
+
+.site-header,
+.site-footer,
+.services-section,
+.admin-auth-section,
+.admin-session-panel {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .site-header,
@@ -11,13 +106,16 @@
   margin-inline: auto;
 }
 
+/* ---------- Header ---------- */
+
 .site-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding-block: 24px;
-  border-bottom: 1px solid #e8e8df;
+  margin-top: 20px;
+  padding: 16px 24px;
+  border-radius: var(--glass-radius);
 }
 
 .brand {
@@ -32,15 +130,17 @@
   width: 44px;
   height: 44px;
   place-items: center;
+  border: 1px solid var(--glass-border);
   border-radius: 14px;
-  background: #234e3d;
-  color: #fff;
+  background: linear-gradient(135deg, var(--sky-400), var(--sky-600));
+  color: var(--text-on-primary);
   font-size: 15px;
   font-weight: 800;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
 }
 
 .brand__name {
-  color: #20392e;
+  color: var(--text-strong);
   font-size: 18px;
   font-weight: 750;
 }
@@ -48,15 +148,31 @@
 .brand__name small {
   display: block;
   margin-top: 3px;
-  color: #748078;
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 400;
 }
 
+.site-header__account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
 .site-header__tagline {
-  color: #5b6b61;
+  color: var(--text-muted);
   font-size: 14px;
 }
+
+.site-header__auth-error {
+  max-width: 18rem;
+  color: var(--danger);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+/* ---------- Nội dung chính ---------- */
 
 .main-content {
   flex: 1;
@@ -70,7 +186,7 @@
 
 .eyebrow {
   margin-bottom: 12px;
-  color: #397354;
+  color: var(--sky-800);
   font-size: 12px;
   font-weight: 750;
   letter-spacing: 2px;
@@ -78,7 +194,7 @@
 
 .intro h1 {
   margin: 0;
-  color: #20392e;
+  color: var(--text-strong);
   font-size: clamp(32px, 5vw, 48px);
   font-weight: 750;
   letter-spacing: -1.5px;
@@ -88,9 +204,16 @@
 .intro__description {
   max-width: 600px;
   margin-top: 18px;
-  color: #657269;
+  color: var(--text-body);
   font-size: 16px;
   line-height: 1.8;
+}
+
+/* ---------- Khu vực danh sách dịch vụ ---------- */
+
+.services-section {
+  padding: 28px;
+  border-radius: 28px;
 }
 
 .section-heading {
@@ -103,23 +226,24 @@
 
 .section-heading h2 {
   margin: 0;
-  color: #20392e;
+  color: var(--text-strong);
   font-size: 23px;
   font-weight: 700;
 }
 
 .section-heading p {
   margin-top: 6px;
-  color: #7a857d;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
 .service-count {
   flex-shrink: 0;
+  border: 1px solid var(--glass-border);
   border-radius: 999px;
-  background: #e8f0e9;
+  background: rgba(255, 255, 255, 0.5);
   padding: 7px 12px;
-  color: #2d6244;
+  color: var(--sky-800);
   font-size: 13px;
   font-weight: 650;
 }
@@ -130,20 +254,26 @@
   gap: 22px;
 }
 
+/* ---------- Thẻ dịch vụ ---------- */
+
 .service-card {
   overflow: hidden;
-  border: 1px solid #e7e9e3;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 5px 20px rgb(28 50 37 / 4%);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.12);
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    background 200ms ease;
 }
 
 .service-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgb(28 50 37 / 9%);
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 14px 32px rgba(14, 165, 233, 0.22);
 }
 
 .service-card__image,
@@ -156,8 +286,8 @@
 }
 
 .service-card__placeholder {
-  background: linear-gradient(135deg, #e5eee5, #f5efe3);
-  color: #53715b;
+  background: linear-gradient(135deg, #bae6fd, #e0f2fe);
+  color: var(--sky-800);
   font-size: 32px;
   font-weight: 800;
 }
@@ -167,7 +297,7 @@
 }
 
 .service-card__label {
-  color: #397354;
+  color: var(--sky-600);
   font-size: 11px;
   font-weight: 750;
   letter-spacing: 1.3px;
@@ -175,17 +305,19 @@
 
 .service-card h3 {
   margin: 10px 0;
-  color: #263b30;
+  color: var(--text-strong);
   font-size: 19px;
   line-height: 1.4;
 }
 
 .service-card__content p {
-  color: #6e7971;
+  color: var(--text-body);
   font-size: 14px;
   line-height: 1.8;
   overflow-wrap: anywhere;
 }
+
+/* ---------- Trạng thái tải / lỗi / trống ---------- */
 
 .state-panel {
   display: flex;
@@ -194,74 +326,186 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  border: 1px dashed #d7ded5;
-  border-radius: 16px;
-  background: rgb(255 255 255 / 70%);
+  border: 1px dashed rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   padding: 28px;
   text-align: center;
 }
 
 .state-panel h3 {
   margin: 0;
-  color: #263b30;
+  color: var(--text-strong);
 }
 
 .state-panel p {
-  color: #6e7971;
+  color: var(--text-body);
   font-size: 14px;
   line-height: 1.7;
 }
 
 .state-panel--error {
-  border-color: #edcaca;
-  background: #fffafa;
+  border-color: rgba(180, 35, 24, 0.35);
+  background: rgba(255, 245, 245, 0.55);
 }
 
 .state-panel--error h3 {
-  color: #9d3232;
+  color: var(--danger);
 }
 
 .spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid #dce7dd;
-  border-top-color: #397354;
+  border: 3px solid rgba(255, 255, 255, 0.7);
+  border-top-color: var(--sky-500);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
+/* ---------- Nút bấm ---------- */
+
+.retry-button,
+.admin-login-form button,
+.admin-logout-button {
+  padding: 0.75rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--sky-400), var(--sky-600));
+  color: var(--text-on-primary);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.3);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    filter 150ms ease;
+}
+
 .retry-button {
   margin-top: 8px;
-  border: 0;
-  border-radius: 9px;
-  background: #234e3d;
   padding: 11px 18px;
-  color: #fff;
-  font-weight: 650;
+  border-radius: 12px;
 }
 
-.retry-button:hover {
-  background: #193a2c;
+.retry-button:hover,
+.admin-login-form button:hover:not(:disabled),
+.admin-logout-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.4);
 }
 
-.retry-button:focus-visible {
-  outline: 3px solid #8ab89a;
+.retry-button:focus-visible,
+.admin-login-form button:focus-visible,
+.admin-logout-button:focus-visible {
+  outline: 3px solid rgba(186, 230, 253, 0.9);
   outline-offset: 3px;
 }
 
+.admin-login-form button:disabled,
+.admin-logout-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ---------- Footer ---------- */
+
 .site-footer {
-  border-top: 1px solid #e8e8df;
-  padding-block: 22px;
-  color: #7a857d;
+  margin-bottom: 20px;
+  padding-block: 18px;
+  border-radius: var(--glass-radius);
+  color: var(--text-muted);
   font-size: 13px;
   text-align: center;
 }
+
+/* ---------- Form đăng nhập & phiên quản trị ---------- */
+
+.admin-auth-section,
+.admin-session-panel {
+  width: min(100% - 2rem, 32rem);
+  margin: 1.5rem auto;
+  padding: 1.75rem;
+  border-radius: 24px;
+  color: var(--text-body);
+}
+
+.admin-auth-section h2,
+.admin-session-panel h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--text-strong);
+}
+
+.admin-login-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.admin-login-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--sky-900);
+  font-weight: 600;
+}
+
+.admin-login-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text-strong);
+  font: inherit;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+.admin-login-form input::placeholder {
+  color: var(--text-muted);
+}
+
+.admin-login-form input:focus {
+  border-color: var(--sky-400);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
+}
+
+.admin-login-form input:disabled {
+  opacity: 0.6;
+}
+
+.admin-auth-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.admin-session-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* ---------- Animation ---------- */
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
+
+/* ---------- Responsive ---------- */
 
 @media (max-width: 800px) {
   .services-grid {
@@ -275,6 +519,10 @@
   .intro {
     margin-bottom: 36px;
   }
+
+  .services-section {
+    padding: 22px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -282,6 +530,10 @@
   .main-content,
   .site-footer {
     width: calc(100% - 32px);
+  }
+
+  .site-header {
+    padding: 14px 16px;
   }
 
   .site-header__tagline {
@@ -306,6 +558,15 @@
   }
 }
 
+@media (max-width: 480px) {
+  .admin-auth-section,
+  .admin-session-panel {
+    width: auto;
+    margin: 1rem;
+    padding: 1.25rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -314,99 +575,10 @@
     transition-duration: 0.01ms !important;
   }
 
-  .service-card:hover {
+  .service-card:hover,
+  .retry-button:hover,
+  .admin-login-form button:hover:not(:disabled),
+  .admin-logout-button:hover:not(:disabled) {
     transform: none;
-  }
-}
-
-.site-header__account {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
-}
-
-.site-header__auth-error {
-  max-width: 18rem;
-  color: #b42318;
-  font-size: 0.75rem;
-  text-align: right;
-}
-.admin-auth-section,
-.admin-session-panel {
-  width: min(100% - 2rem, 32rem);
-  margin: 1.5rem auto;
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 1rem;
-  background: #ffffff;
-  color: #1f2937;
-}
-
-.admin-auth-section h2,
-.admin-session-panel h2 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-}
-
-.admin-login-form {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.25rem;
-}
-
-.admin-login-form label {
-  display: grid;
-  gap: 0.4rem;
-  font-weight: 600;
-}
-
-.admin-login-form input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.5rem;
-  font: inherit;
-}
-
-.admin-login-form button,
-.admin-logout-button {
-  padding: 0.75rem 1rem;
-  border: 0;
-  border-radius: 0.5rem;
-  background: #1f2937;
-  color: #ffffff;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.admin-login-form button:disabled,
-.admin-logout-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-.admin-auth-error {
-  margin: 0;
-  color: #b42318;
-  font-size: 0.9rem;
-}
-
-.admin-session-panel {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-@media (max-width: 480px) {
-  .admin-auth-section,
-  .admin-session-panel {
-    width: auto;
-    margin: 1rem;
-    padding: 1rem;
   }
 }
