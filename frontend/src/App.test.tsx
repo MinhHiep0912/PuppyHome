@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { useAuth } from "./features/auth/useAuth";
@@ -59,5 +59,60 @@ describe("admin service route access", () => {
 
     render(<App />);
     expect(screen.getByText("Trang quản lý dịch vụ")).toBeInTheDocument();
+  });
+});
+
+describe("guest and login shell separation", () => {
+  beforeEach(() => {
+    vi.mocked(useAuth).mockReturnValue(baseAuthState);
+  });
+
+  it("renders the guest home without login form or role shell", () => {
+    window.history.replaceState({}, "", "/");
+    render(<App />);
+    expect(screen.getByRole("heading", { name: /Chăm sóc thú cưng/ })).toBeInTheDocument();
+    expect(screen.queryByText("Form đăng nhập Admin")).not.toBeInTheDocument();
+  });
+
+  it("renders a separate login route", () => {
+    window.history.replaceState({}, "", "/login");
+    render(<App />);
+    expect(screen.getByText("Form đăng nhập Admin")).toBeInTheDocument();
+  });
+
+  it("marks registration as unavailable without creating a fake account flow", () => {
+    window.history.replaceState({}, "", "/register");
+    render(<App />);
+    expect(
+      screen.getByRole("heading", { name: "Chức năng đăng ký chưa khả dụng" }),
+    ).toBeInTheDocument();
+  });
+
+  it("moves an Admin session from guest route to the Admin role shell", async () => {
+    window.history.replaceState({}, "", "/");
+    vi.mocked(useAuth).mockReturnValue({
+      ...baseAuthState,
+      admin: { username: "admin", authorities: ["ROLE_ADMIN"] },
+    });
+
+    render(<App />);
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/admin/services");
+    });
+    expect(screen.getByText("Trang quản lý dịch vụ")).toBeInTheDocument();
+  });
+
+  it("keeps logout failure in the role shell and exposes its error", () => {
+    window.history.replaceState({}, "", "/admin/services");
+    vi.mocked(useAuth).mockReturnValue({
+      ...baseAuthState,
+      admin: { username: "admin", authorities: ["ROLE_ADMIN"] },
+      error: "Đăng xuất không thành công.",
+      logout: vi.fn().mockRejectedValue(new Error("logout failed")),
+    });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Tài khoản admin" }));
+    expect(screen.getByText("Đăng xuất không thành công.")).toBeInTheDocument();
   });
 });

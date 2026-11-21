@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
-import type { Service } from "./features/service-catalog/service";
-import { getPublishedServices } from "./features/service-catalog/serviceApi";
-import { useAuth } from "./features/auth/useAuth";
 import { AdminLoginForm } from "./features/auth/AdminLoginForm";
+import { useAuth } from "./features/auth/useAuth";
 import { AdminServicesPage } from "./features/admin-services/AdminServicesPage";
 import { ApplicationShell } from "./features/shell/ApplicationShell";
+import {
+  GuestHomePage,
+  GuestNewsPage,
+  GuestServicesPage,
+} from "./features/guest/GuestPages";
+import { GuestShell } from "./features/guest/GuestShell";
 import "./App.css";
 
+function normalizedPath(): string {
+  return window.location.pathname.replace(/\/+$/, "") || "/";
+}
+
 function App() {
-  const isAdminServicesRoute =
-    window.location.pathname.replace(/\/+$/, "") === "/admin/services";
-  const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [retryKey, setRetryKey] = useState(0);
+  const path = normalizedPath();
   const {
     admin,
     isCheckingSession,
@@ -21,264 +24,135 @@ function App() {
     login,
     logout,
   } = useAuth();
-
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const canManageServices =
     admin?.authorities.includes("ROLE_ADMIN") ?? false;
 
   useEffect(() => {
-    if (isAdminServicesRoute) {
-      return;
-    }
-
-    let cancelled = false;
-
-    async function loadServices() {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await getPublishedServices();
-
-        if (!cancelled) {
-          setServices(data);
-        }
-      } catch (caughtError: unknown) {
-        if (!cancelled) {
-          const message =
-            caughtError instanceof Error
-              ? caughtError.message.includes("fetch")
-                ? "Không thể kết nối đến máy chủ. Hãy kiểm tra backend và Vite proxy."
-                : caughtError.message
-              : "Đã xảy ra lỗi không xác định.";
-
-          setError(message);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+    if (!isCheckingSession && admin && canManageServices) {
+      if (path !== "/admin/services") {
+        window.history.replaceState({}, "", "/admin/services");
       }
     }
 
-    void loadServices();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isAdminServicesRoute, retryKey]);
+    if (!isCheckingSession && !admin && path.startsWith("/admin")) {
+      window.history.replaceState({}, "", "/login");
+    }
+  }, [admin, canManageServices, isCheckingSession, path]);
 
   async function handleLogout(): Promise<void> {
     setIsLoggingOut(true);
-
     try {
       await logout();
+      window.history.replaceState({}, "", "/");
+      window.location.reload();
     } catch {
-      // useAuth đã lưu lỗi; giữ trạng thái phiên hiện tại nếu thất bại.
+      // useAuth keeps the session and surfaces the logout error.
     } finally {
       setIsLoggingOut(false);
     }
   }
 
-  return (
-    <div className="app">
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="Puppy's Home - Trang chủ">
-          <span className="brand__mark">PH</span>
+  async function handleLogin(credentials: Parameters<typeof login>[0]) {
+    await login(credentials);
+  }
 
-          <span className="brand__name">
-            Puppy&apos;s Home
-            <small>Không gian dịch vụ của bạn</small>
-          </span>
-        </a>
-
-        <div className="site-header__account" aria-live="polite">
-          <span className="site-header__tagline">
-            {isCheckingSession
-              ? "Đang kiểm tra phiên quản trị..."
-              : authError
-                ? "Không thể kiểm tra phiên quản trị"
-                : admin
-                  ? `Đã đăng nhập: ${admin.username}`
-                  : "Chưa đăng nhập quản trị"}
-          </span>
-
-          {authError && (
-            <span className="site-header__auth-error" role="status">
-              {authError}
-            </span>
-          )}
-          {canManageServices && (
-            <a className="admin-services-link" href="/admin/services">
-              Quản lý dịch vụ
-            </a>
-          )}
+  if (isCheckingSession) {
+    return (
+      <div className="app">
+        <div className="state-panel" role="status">
+          <span className="spinner" aria-hidden="true" />
+          <p>Đang kiểm tra phiên đăng nhập...</p>
         </div>
-      </header>
+      </div>
+    );
+  }
 
-      {!isAdminServicesRoute && !isCheckingSession && !admin && (
-        <AdminLoginForm onLogin={login} error={authError} />
-      )}
+  if (admin) {
+    if (!canManageServices) {
+      return (
+        <div className="app">
+          <section className="state-panel state-panel--error" role="alert">
+            <h1>Không có quyền truy cập</h1>
+            <p>Tài khoản hiện tại không có quyền Admin.</p>
+          </section>
+        </div>
+      );
+    }
 
-      {admin && (
-        <section
-          className="admin-session-panel"
-          aria-labelledby="admin-session-heading"
-        >
-          <div>
-            <h2 id="admin-session-heading">Khu vực quản trị</h2>
-
-            <p>
-              Đang đăng nhập với tài khoản <strong>{admin.username}</strong>.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="admin-logout-button"
-            disabled={isLoggingOut}
-            onClick={() => void handleLogout()}
-          >
-            {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
-          </button>
-
-          {authError && (
-            <p className="admin-auth-error" role="alert">
-              {authError}
-            </p>
-          )}
-        </section>
-      )}
-
-      <main className="main-content">
-        {isAdminServicesRoute ? (
-          isCheckingSession ? (
-            <div className="state-panel" role="status">
-              <span className="spinner" aria-hidden="true" />
-              <p>Đang xác minh quyền Admin...</p>
-            </div>
-          ) : !admin ? (
-            <AdminLoginForm onLogin={login} error={authError} />
-          ) : !canManageServices ? (
-            <section
-              className="state-panel state-panel--error"
-              role="alert"
-              aria-labelledby="admin-permission-heading"
-            >
-              <h2 id="admin-permission-heading">Không có quyền truy cập</h2>
-              <p>Tài khoản hiện tại không có quyền Admin.</p>
-            </section>
-          ) : (
-            <ApplicationShell
-              admin={admin}
-              isLoggingOut={isLoggingOut}
-              logoutError={authError}
-              onLogout={() => void handleLogout()}
-            >
-              <AdminServicesPage />
-            </ApplicationShell>
-          )
+    return (
+      <ApplicationShell
+        admin={admin}
+        isLoggingOut={isLoggingOut}
+        logoutError={authError}
+        onLogout={() => void handleLogout()}
+      >
+        {path === "/admin/services" || path === "/" || path === "/services" || path === "/news" || path === "/login" ? (
+          <AdminServicesPage />
         ) : (
-          <>
-        <section className="intro">
-          <p className="eyebrow">PUPPY&apos;S HOME</p>
-
-          <h1>Khám phá các dịch vụ</h1>
-
-          <p className="intro__description">
-            Tìm hiểu các dịch vụ đang được cung cấp và lựa chọn thông tin phù
-            hợp với nhu cầu của bạn.
-          </p>
-        </section>
-
-        <section
-          className="services-section"
-          aria-labelledby="services-heading"
-        >
-          <div className="section-heading">
-            <div>
-              <h2 id="services-heading">Danh sách dịch vụ</h2>
-              <p>Thông tin được tải trực tiếp từ hệ thống.</p>
-            </div>
-
-            {!isLoading && !error && (
-              <span className="service-count">{services.length} dịch vụ</span>
-            )}
-          </div>
-
-          {isLoading && (
-            <div className="state-panel" role="status">
-              <span className="spinner" aria-hidden="true" />
-              <p>Đang tải danh sách dịch vụ...</p>
-            </div>
-          )}
-
-          {!isLoading && error && (
-            <div className="state-panel state-panel--error" role="alert">
-              <h3>Chưa thể tải danh sách dịch vụ</h3>
-              <p>{error}</p>
-
-              <button
-                className="retry-button"
-                type="button"
-                onClick={() => setRetryKey((current) => current + 1)}
-              >
-                Thử tải lại
-              </button>
-            </div>
-          )}
-
-          {!isLoading && !error && services.length === 0 && (
-            <div className="state-panel">
-              <h3>Chưa có dịch vụ được xuất bản</h3>
-              <p>Danh sách sẽ hiển thị khi có dịch vụ được xuất bản.</p>
-            </div>
-          )}
-
-          {!isLoading && !error && services.length > 0 && (
-            <div className="services-grid">
-              {services.map((service) => (
-                <article className="service-card" key={service.id}>
-                  {service.imageUrl ? (
-                    <img
-                      className="service-card__image"
-                      src={service.imageUrl}
-                      alt={service.name}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div
-                      className="service-card__placeholder"
-                      aria-hidden="true"
-                    >
-                      <span>PH</span>
-                    </div>
-                  )}
-
-                  <div className="service-card__content">
-                    <span className="service-card__label">DỊCH VỤ</span>
-
-                    <h3>{service.name}</h3>
-
-                    <p>
-                      {service.shortDescription ||
-                        service.description ||
-                        "Thông tin dịch vụ đang được cập nhật."}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-          </>
+          <section className="state-panel" role="alert">
+            <h1>Trang role chưa được triển khai</h1>
+            <p>Chỉ route Dịch vụ &amp; giá được xác minh trong phạm vi hiện tại.</p>
+          </section>
         )}
-      </main>
+      </ApplicationShell>
+    );
+  }
 
-      <footer className="site-footer">
-        <p>© {new Date().getFullYear()} Puppy&apos;s Home</p>
-      </footer>
-    </div>
+  if (path === "/login" || path.startsWith("/admin")) {
+    return (
+      <GuestShell activePage="home">
+        <section className="login-page" aria-labelledby="login-page-heading">
+          <AdminLoginForm onLogin={handleLogin} error={authError} />
+        </section>
+      </GuestShell>
+    );
+  }
+
+  if (path === "/services") {
+    return (
+      <GuestShell activePage="services">
+        <GuestServicesPage />
+      </GuestShell>
+    );
+  }
+
+  if (path === "/news") {
+    return (
+      <GuestShell activePage="news">
+        <GuestNewsPage />
+      </GuestShell>
+    );
+  }
+
+  if (path === "/register") {
+    return (
+      <GuestShell activePage="home">
+        <section className="guest-page-state" role="status" aria-labelledby="register-heading">
+          <p className="guest-eyebrow">ĐĂNG KÝ</p>
+          <h1 id="register-heading">Chức năng đăng ký chưa khả dụng</h1>
+          <p>Luồng Customer/Employee và API đăng ký chưa được xác minh. Chưa tạo tài khoản giả.</p>
+          <a className="guest-secondary-action" href="/login">Đến trang đăng nhập</a>
+        </section>
+      </GuestShell>
+    );
+  }
+
+  if (path === "/") {
+    return (
+      <GuestShell activePage="home">
+        <GuestHomePage />
+      </GuestShell>
+    );
+  }
+
+  return (
+    <GuestShell activePage="home">
+      <section className="guest-page-state" role="alert">
+        <h1>Không tìm thấy trang</h1>
+        <p><a href="/">Về trang chủ</a></p>
+      </section>
+    </GuestShell>
   );
 }
 
