@@ -172,6 +172,17 @@ body {
   text-align: right;
 }
 
+.admin-services-link {
+  color: var(--sky-800);
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.admin-services-link:hover {
+  text-decoration: underline;
+}
+
 /* ---------- Nội dung chính ---------- */
 
 .main-content {

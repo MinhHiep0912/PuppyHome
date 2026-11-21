@@ -3,9 +3,12 @@ import type { Service } from "./features/service-catalog/service";
 import { getPublishedServices } from "./features/service-catalog/serviceApi";
 import { useAuth } from "./features/auth/useAuth";
 import { AdminLoginForm } from "./features/auth/AdminLoginForm";
+import { AdminServicesPage } from "./features/admin-services/AdminServicesPage";
 import "./App.css";
 
 function App() {
+  const isAdminServicesRoute =
+    window.location.pathname.replace(/\/+$/, "") === "/admin/services";
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,8 +22,14 @@ function App() {
   } = useAuth();
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const canManageServices =
+    admin?.authorities.includes("ROLE_ADMIN") ?? false;
 
   useEffect(() => {
+    if (isAdminServicesRoute) {
+      return;
+    }
+
     let cancelled = false;
 
     async function loadServices() {
@@ -56,7 +65,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [retryKey]);
+  }, [isAdminServicesRoute, retryKey]);
 
   async function handleLogout(): Promise<void> {
     setIsLoggingOut(true);
@@ -98,10 +107,15 @@ function App() {
               {authError}
             </span>
           )}
+          {canManageServices && (
+            <a className="admin-services-link" href="/admin/services">
+              Quản lý dịch vụ
+            </a>
+          )}
         </div>
       </header>
 
-      {!isCheckingSession && !admin && (
+      {!isAdminServicesRoute && !isCheckingSession && !admin && (
         <AdminLoginForm onLogin={login} error={authError} />
       )}
 
@@ -136,6 +150,28 @@ function App() {
       )}
 
       <main className="main-content">
+        {isAdminServicesRoute ? (
+          isCheckingSession ? (
+            <div className="state-panel" role="status">
+              <span className="spinner" aria-hidden="true" />
+              <p>Đang xác minh quyền Admin...</p>
+            </div>
+          ) : !admin ? (
+            <AdminLoginForm onLogin={login} error={authError} />
+          ) : !canManageServices ? (
+            <section
+              className="state-panel state-panel--error"
+              role="alert"
+              aria-labelledby="admin-permission-heading"
+            >
+              <h2 id="admin-permission-heading">Không có quyền truy cập</h2>
+              <p>Tài khoản hiện tại không có quyền Admin.</p>
+            </section>
+          ) : (
+            <AdminServicesPage />
+          )
+        ) : (
+          <>
         <section className="intro">
           <p className="eyebrow">PUPPY&apos;S HOME</p>
 
@@ -227,6 +263,8 @@ function App() {
             </div>
           )}
         </section>
+          </>
+        )}
       </main>
 
       <footer className="site-footer">

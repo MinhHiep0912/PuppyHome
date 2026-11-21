@@ -3,7 +3,7 @@ import type { Admin, LoginCredentials } from "./auth";
 const CSRF_COOKIE_NAME = "XSRF-TOKEN";
 const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
 
-async function getResponseErrorMessage(
+export async function getResponseErrorMessage(
   response: Response,
   fallbackMessage: string,
 ): Promise<string> {
@@ -55,7 +55,7 @@ function readCsrfCookie(): string {
   return token;
 }
 
-async function fetchCsrfToken(): Promise<string> {
+export async function fetchCsrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
     method: "GET",
     credentials: "same-origin",
