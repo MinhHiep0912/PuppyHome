@@ -82,6 +82,23 @@ describe("AdminServicesPage", () => {
     expect(await screen.findByText("Chưa có dịch vụ")).toBeInTheDocument();
   });
 
+  it("renders the service list before the create/edit form", async () => {
+    vi.mocked(getAdminServices).mockResolvedValue([draftService]);
+    render(<AdminServicesPage />);
+
+    const listHeading = await screen.findByRole("heading", {
+      name: "Danh sách dịch vụ",
+    });
+    const formHeading = screen.getByRole("heading", {
+      name: "Tạo dịch vụ",
+    });
+
+    expect(
+      listHeading.compareDocumentPosition(formHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
+  });
+
   it("shows load errors and supports retry", async () => {
     vi.mocked(getAdminServices)
       .mockRejectedValueOnce(new Error("Máy chủ tạm thời không khả dụng"))

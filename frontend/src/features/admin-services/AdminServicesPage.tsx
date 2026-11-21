@@ -286,6 +286,80 @@ export function AdminServicesPage() {
           )}
 
           <section
+            className="admin-services__table-panel"
+            aria-labelledby="service-list-heading"
+          >
+            <h2 id="service-list-heading">Danh sách dịch vụ</h2>
+            {services.length === 0 ? (
+              <div className="state-panel">
+                <h3>Chưa có dịch vụ</h3>
+                <p>Tạo dịch vụ đầu tiên bằng biểu mẫu bên dưới.</p>
+              </div>
+            ) : (
+              <div className="admin-services__table-wrap">
+                <table className="admin-services__table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Dịch vụ</th>
+                      <th scope="col">Thứ tự</th>
+                      <th scope="col">Trạng thái</th>
+                      <th scope="col">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {services.map((service) => (
+                      <tr key={service.id}>
+                        <td>
+                          <strong>{service.name}</strong>
+                          <span className="admin-services__slug">
+                            {service.slug}
+                          </span>
+                        </td>
+                        <td>{service.sortOrder}</td>
+                        <td>
+                          <span
+                            className={`service-status service-status--${service.status.toLowerCase()}`}
+                          >
+                            {service.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="admin-services__row-actions">
+                            <button
+                              type="button"
+                              onClick={() => startEditing(service)}
+                              disabled={pendingServiceId !== null || isSaving}
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleStatusChange(service)}
+                              disabled={pendingServiceId !== null || isSaving}
+                            >
+                              {service.status === "PUBLISHED"
+                                ? "Chuyển về DRAFT"
+                                : "Xuất bản"}
+                            </button>
+                            <button
+                              className="admin-services__delete"
+                              type="button"
+                              onClick={() => void handleSoftDelete(service)}
+                              disabled={pendingServiceId !== null || isSaving}
+                            >
+                              Đưa về DRAFT
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section
             className="admin-services__form-panel"
             aria-labelledby="service-form-heading"
           >
@@ -409,80 +483,6 @@ export function AdminServicesPage() {
                 )}
               </div>
             </form>
-          </section>
-
-          <section
-            className="admin-services__table-panel"
-            aria-labelledby="service-list-heading"
-          >
-            <h2 id="service-list-heading">Danh sách dịch vụ</h2>
-            {services.length === 0 ? (
-              <div className="state-panel">
-                <h3>Chưa có dịch vụ</h3>
-                <p>Tạo dịch vụ đầu tiên bằng biểu mẫu phía trên.</p>
-              </div>
-            ) : (
-              <div className="admin-services__table-wrap">
-                <table className="admin-services__table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Dịch vụ</th>
-                      <th scope="col">Thứ tự</th>
-                      <th scope="col">Trạng thái</th>
-                      <th scope="col">Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {services.map((service) => (
-                      <tr key={service.id}>
-                        <td>
-                          <strong>{service.name}</strong>
-                          <span className="admin-services__slug">
-                            {service.slug}
-                          </span>
-                        </td>
-                        <td>{service.sortOrder}</td>
-                        <td>
-                          <span
-                            className={`service-status service-status--${service.status.toLowerCase()}`}
-                          >
-                            {service.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="admin-services__row-actions">
-                            <button
-                              type="button"
-                              onClick={() => startEditing(service)}
-                              disabled={pendingServiceId !== null || isSaving}
-                            >
-                              Sửa
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void handleStatusChange(service)}
-                              disabled={pendingServiceId !== null || isSaving}
-                            >
-                              {service.status === "PUBLISHED"
-                                ? "Chuyển về DRAFT"
-                                : "Xuất bản"}
-                            </button>
-                            <button
-                              className="admin-services__delete"
-                              type="button"
-                              onClick={() => void handleSoftDelete(service)}
-                              disabled={pendingServiceId !== null || isSaving}
-                            >
-                              Đưa về DRAFT
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </section>
         </>
       )}
