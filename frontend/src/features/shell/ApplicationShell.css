@@ -1,0 +1,300 @@
+.application-shell {
+  --shell-sidebar-width: 220px;
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr);
+  gap: 14px;
+  box-sizing: border-box;
+  padding: 16px;
+  background: linear-gradient(135deg, #cfeefc 0%, #b8e2fa 55%, #a9d8f7 100%);
+  color: var(--text-body);
+}
+
+.application-shell__sidebar,
+.application-shell__topbar,
+.application-shell__footer {
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+
+.application-shell__sidebar {
+  position: sticky;
+  top: 16px;
+  height: calc(100vh - 32px);
+  border-radius: 22px;
+  padding: 18px 14px;
+  box-sizing: border-box;
+}
+
+.application-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-strong);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.application-shell__brand small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.application-shell__brand-mark,
+.application-shell__avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--sky-400), var(--sky-600));
+  color: white;
+  font-weight: 800;
+}
+
+.application-shell__brand-mark {
+  width: 42px;
+  height: 42px;
+}
+
+.application-shell__nav {
+  display: grid;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.application-shell__nav-item {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  color: var(--text-body);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.application-shell__nav-item--active {
+  background: linear-gradient(135deg, #7b5cff, #1c7cf0);
+  color: white;
+  box-shadow: 0 8px 20px rgba(108, 76, 241, 0.22);
+}
+
+.application-shell__nav-item--blocked {
+  color: var(--text-muted);
+  cursor: default;
+  opacity: 0.75;
+}
+
+.application-shell__workspace {
+  min-width: 0;
+}
+
+.application-shell__topbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 18px;
+  padding: 10px 16px;
+  box-sizing: border-box;
+}
+
+.application-shell__topbar > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.application-shell__context {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.application-shell__profile {
+  position: relative;
+}
+
+.application-shell__profile-button {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.48);
+  padding: 6px 10px 6px 6px;
+  color: var(--text-strong);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.application-shell__avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+}
+
+.application-shell__profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--glass-shadow);
+  padding: 12px;
+}
+
+.application-shell__profile-menu p {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.application-shell__profile-menu button {
+  width: 100%;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--sky-400), var(--sky-600));
+  padding: 10px;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.application-shell__profile-menu button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.application-shell__logout-error {
+  color: var(--danger) !important;
+}
+
+.application-shell__main {
+  min-width: 0;
+}
+
+.application-shell__footer {
+  border-radius: 16px;
+  padding: 14px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.application-shell__menu-button,
+.application-shell__sidebar-close,
+.application-shell__backdrop {
+  display: none;
+}
+
+.application-shell button:focus-visible,
+.application-shell a:focus-visible {
+  outline: 3px solid rgba(56, 189, 248, 0.55);
+  outline-offset: 3px;
+}
+
+@media (max-width: 800px) {
+  .application-shell {
+    display: block;
+    padding: 10px;
+  }
+
+  .application-shell__sidebar {
+    position: fixed;
+    z-index: 50;
+    top: 10px;
+    left: 10px;
+    width: min(280px, calc(100% - 32px));
+    height: calc(100vh - 20px);
+    transform: translateX(calc(-100% - 20px));
+    transition: transform 180ms ease;
+  }
+
+  .application-shell__sidebar--open {
+    transform: translateX(0);
+  }
+
+  .application-shell__backdrop {
+    position: fixed;
+    z-index: 40;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(12, 74, 110, 0.28);
+  }
+
+  .application-shell__menu-button {
+    position: fixed;
+    z-index: 30;
+    right: 18px;
+    bottom: 18px;
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky-400), var(--sky-600));
+    color: white;
+    font-size: 20px;
+  }
+
+  .application-shell__sidebar-close {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    display: block;
+    border: 1px solid rgba(7, 89, 133, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 9px 12px;
+  }
+
+  .application-shell__workspace {
+    display: grid;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .application-shell__topbar {
+    min-height: 58px;
+  }
+
+  .application-shell__context,
+  .application-shell__topbar strong {
+    max-width: 115px;
+  }
+
+  .application-shell__profile-button > span:last-child {
+    display: none;
+  }
+
+  .application-shell__profile-menu {
+    position: fixed;
+    top: 76px;
+    right: 10px;
+    width: calc(100% - 20px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .application-shell__sidebar {
+    transition: none;
+  }
+}

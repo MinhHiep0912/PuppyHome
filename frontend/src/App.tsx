@@ -4,6 +4,7 @@ import { getPublishedServices } from "./features/service-catalog/serviceApi";
 import { useAuth } from "./features/auth/useAuth";
 import { AdminLoginForm } from "./features/auth/AdminLoginForm";
 import { AdminServicesPage } from "./features/admin-services/AdminServicesPage";
+import { ApplicationShell } from "./features/shell/ApplicationShell";
 import "./App.css";
 
 function App() {
@@ -168,7 +169,14 @@ function App() {
               <p>Tài khoản hiện tại không có quyền Admin.</p>
             </section>
           ) : (
-            <AdminServicesPage />
+            <ApplicationShell
+              admin={admin}
+              isLoggingOut={isLoggingOut}
+              logoutError={authError}
+              onLogout={() => void handleLogout()}
+            >
+              <AdminServicesPage />
+            </ApplicationShell>
           )
         ) : (
           <>
