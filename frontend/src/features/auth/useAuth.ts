@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Admin, Customer, LoginCredentials } from "./auth";
-import {
-  getCurrentAdmin,
-  loginAdmin as requestLoginAdmin,
-  logoutAdmin as requestLogoutAdmin,
-} from "./authApi";
+import type {
+  Admin,
+  AuthenticatedUser,
+  Customer,
+  LoginCredentials,
+} from "./auth";
+import { getCurrentUser, loginUser, logoutUser } from "./authApi";
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
   return error instanceof Error ? error.message : fallbackMessage;
@@ -16,62 +17,60 @@ export function useAuth() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const setAuthenticatedUser = useCallback(
+    (user: AuthenticatedUser | null): void => {
+      if (user?.authorities.includes("ROLE_ADMIN")) {
+        setAdmin(user);
+        setCustomer(null);
+      } else if (user?.authorities.includes("ROLE_CUSTOMER")) {
+        setAdmin(null);
+        setCustomer(user);
+      } else {
+        setAdmin(null);
+        setCustomer(null);
+      }
+    },
+    [],
+  );
+
   const refreshSession = useCallback(async (): Promise<void> => {
     setIsCheckingSession(true);
     setError(null);
 
     try {
-      const currentAdmin = await getCurrentAdmin();
-      if (currentAdmin?.authorities.includes("ROLE_ADMIN")) {
-        setAdmin(currentAdmin);
-        setCustomer(null);
-      } else if (currentAdmin?.authorities.includes("ROLE_CUSTOMER")) {
-        setAdmin(null);
-        setCustomer(currentAdmin as unknown as Customer);
-      } else {
-        setAdmin(null);
-        setCustomer(null);
-      }
+      const currentUser = await getCurrentUser();
+      setAuthenticatedUser(currentUser);
     } catch (caughtError: unknown) {
       setAdmin(null);
       setCustomer(null);
       setError(
-        getErrorMessage(caughtError, "Không thể kiểm tra phiên quản trị."),
+        getErrorMessage(caughtError, "Không thể kiểm tra phiên đăng nhập."),
       );
     } finally {
       setIsCheckingSession(false);
     }
-  }, []);
+  }, [setAuthenticatedUser]);
 
   const login = useCallback(
     async (credentials: LoginCredentials): Promise<void> => {
       setError(null);
 
       try {
-        const authenticatedAdmin = await requestLoginAdmin(credentials);
-        if (authenticatedAdmin.authorities.includes("ROLE_ADMIN")) {
-          setAdmin(authenticatedAdmin);
-          setCustomer(null);
-        } else if (authenticatedAdmin.authorities.includes("ROLE_CUSTOMER")) {
-          setAdmin(null);
-          setCustomer(authenticatedAdmin as unknown as Customer);
-        } else {
-          setAdmin(null);
-          setCustomer(null);
-        }
+        const authenticatedUser = await loginUser(credentials);
+        setAuthenticatedUser(authenticatedUser);
       } catch (caughtError: unknown) {
         setError(getErrorMessage(caughtError, "Đăng nhập không thành công."));
         throw caughtError;
       }
     },
-    [],
+    [setAuthenticatedUser],
   );
 
   const logout = useCallback(async (): Promise<void> => {
     setError(null);
 
     try {
-      await requestLogoutAdmin();
+      await logoutUser();
       setAdmin(null);
       setCustomer(null);
     } catch (caughtError: unknown) {
@@ -85,26 +84,17 @@ export function useAuth() {
 
     async function checkInitialSession(): Promise<void> {
       try {
-        const currentAdmin = await getCurrentAdmin();
+        const currentUser = await getCurrentUser();
 
         if (!cancelled) {
-          if (currentAdmin?.authorities.includes("ROLE_ADMIN")) {
-            setAdmin(currentAdmin);
-            setCustomer(null);
-          } else if (currentAdmin?.authorities.includes("ROLE_CUSTOMER")) {
-            setAdmin(null);
-            setCustomer(currentAdmin as unknown as Customer);
-          } else {
-            setAdmin(null);
-            setCustomer(null);
-          }
+          setAuthenticatedUser(currentUser);
         }
       } catch (caughtError: unknown) {
         if (!cancelled) {
           setAdmin(null);
           setCustomer(null);
           setError(
-            getErrorMessage(caughtError, "Không thể kiểm tra phiên quản trị."),
+            getErrorMessage(caughtError, "Không thể kiểm tra phiên đăng nhập."),
           );
         }
       } finally {
@@ -119,7 +109,7 @@ export function useAuth() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setAuthenticatedUser]);
 
   return {
     admin,

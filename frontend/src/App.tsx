@@ -4,7 +4,9 @@ import { CustomerRegistrationForm } from "./features/auth/CustomerRegistrationFo
 import { registerCustomer } from "./features/auth/authApi";
 import { useAuth } from "./features/auth/useAuth";
 import { AdminServicesPage } from "./features/admin-services/AdminServicesPage";
+import { CustomerServicesPage } from "./features/customer-services/CustomerServicesPage";
 import { ApplicationShell } from "./features/shell/ApplicationShell";
+import { CustomerShell } from "./features/shell/CustomerShell";
 import {
   GuestHomePage,
   GuestNewsPage,
@@ -19,6 +21,8 @@ function normalizedPath(): string {
 
 function App() {
   const path = normalizedPath();
+  const isCustomerRoute = path === "/customer" || path.startsWith("/customer/");
+  const customerPath = isCustomerRoute ? path : "/customer";
   const {
     admin,
     customer,
@@ -34,7 +38,7 @@ function App() {
 
   useEffect(() => {
     if (!isCheckingSession && customer) {
-      if (path !== "/customer") {
+      if (!isCustomerRoute) {
         window.history.replaceState({}, "", "/customer/");
       }
     }
@@ -48,7 +52,7 @@ function App() {
     if (!isCheckingSession && !admin && path.startsWith("/admin")) {
       window.history.replaceState({}, "", "/login");
     }
-  }, [admin, customer, canManageServices, isCheckingSession, path]);
+  }, [admin, customer, canManageServices, isCheckingSession, isCustomerRoute, path]);
 
   async function handleLogout(): Promise<void> {
     setIsLoggingOut(true);
@@ -98,13 +102,55 @@ function App() {
 
   if (customer) {
     return (
-      <GuestShell activePage="home">
-        <section className="guest-page-state" role="status" aria-labelledby="customer-heading">
-          <p className="guest-eyebrow">KHU VỰC CUSTOMER</p>
-          <h1 id="customer-heading">Chào mừng, {customer.username}</h1>
-          <p>Tài khoản đã được kích hoạt và phiên đăng nhập đang hoạt động.</p>
-        </section>
-      </GuestShell>
+      <CustomerShell
+        customer={customer}
+        activePage={
+          customerPath === "/customer/services"
+            ? "services"
+            : customerPath === "/customer/news"
+              ? "news"
+              : customerPath === "/customer/account"
+                ? "account"
+                : "overview"
+        }
+        isLoggingOut={isLoggingOut}
+        logoutError={authError}
+        onLogout={() => void handleLogout()}
+      >
+        {customerPath === "/customer" && (
+          <section className="guest-page-state" aria-labelledby="customer-heading">
+            <p className="guest-eyebrow">KHU VỰC KHÁCH HÀNG</p>
+            <h1 id="customer-heading">Chào mừng, {customer.username}</h1>
+            <p>Tài khoản đã được kích hoạt và phiên đăng nhập đang hoạt động.</p>
+            <div className="guest-hero__actions">
+              <a className="guest-primary-action" href="/customer/services">Khám phá dịch vụ</a>
+              <a className="guest-secondary-action" href="/customer/account">Thông tin tài khoản</a>
+            </div>
+          </section>
+        )}
+        {customerPath === "/customer/services" && <CustomerServicesPage />}
+        {customerPath === "/customer/news" && <GuestNewsPage />}
+        {customerPath === "/customer/account" && (
+          <section className="guest-page-state" aria-labelledby="customer-account-heading">
+            <p className="guest-eyebrow">TÀI KHOẢN</p>
+            <h1 id="customer-account-heading">Thông tin khách hàng</h1>
+            <p>Email đăng nhập: {customer.username}</p>
+            <p>Trạng thái: Đang hoạt động</p>
+          </section>
+        )}
+        {isCustomerRoute &&
+          ![
+            "/customer",
+            "/customer/services",
+            "/customer/news",
+            "/customer/account",
+          ].includes(customerPath) && (
+          <section className="guest-page-state" role="alert">
+            <h1>Không tìm thấy trang</h1>
+            <p><a href="/customer/">Về tổng quan khách hàng</a></p>
+          </section>
+        )}
+      </CustomerShell>
     );
   }
 

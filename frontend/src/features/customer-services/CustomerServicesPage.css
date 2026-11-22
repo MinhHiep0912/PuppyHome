@@ -1,0 +1,136 @@
+.customer-services {
+  display: grid;
+  gap: 20px;
+  padding: 8px 0 12px;
+  color: var(--text-body);
+}
+
+.customer-services__heading,
+.customer-services__state {
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+
+.customer-services__heading {
+  padding: 24px;
+}
+
+.customer-services__eyebrow,
+.customer-service-card__eyebrow {
+  margin: 0 0 10px;
+  color: var(--sky-800);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.customer-services__heading h1 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.15;
+}
+
+.customer-services__heading > p:last-child {
+  margin: 12px 0 0;
+  line-height: 1.65;
+}
+
+.customer-services__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  align-items: start;
+  gap: 20px;
+}
+
+.customer-service-card {
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+
+.customer-service-card__image,
+.customer-service-card__placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.customer-service-card__placeholder {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--sky-200), var(--sky-50));
+  color: var(--sky-800);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.customer-service-card__content {
+  padding: 18px;
+}
+
+.customer-service-card__eyebrow {
+  color: var(--sky-600);
+  font-size: 11px;
+}
+
+.customer-service-card h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 18px;
+}
+
+.customer-service-card p {
+  margin: 12px 0 0;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.customer-services__state {
+  padding: 24px;
+  line-height: 1.65;
+}
+
+.customer-services__state h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 18px;
+}
+
+.customer-services__state p {
+  margin: 8px 0 0;
+}
+
+.customer-services__state--error {
+  color: var(--danger);
+}
+
+.customer-services__notice {
+  margin: 0;
+  padding: 14px 18px;
+  border-left: 3px solid var(--sky-500);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.3);
+  line-height: 1.6;
+}
+
+@media (max-width: 560px) {
+  .customer-services__heading,
+  .customer-services__state {
+    padding: 18px;
+  }
+
+  .customer-services__grid {
+    gap: 16px;
+  }
+}

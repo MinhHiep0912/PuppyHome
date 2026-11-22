@@ -1,16 +1,14 @@
-export interface Admin {
+export interface AuthenticatedUser {
   username: string;
   authorities: string[];
 }
+
+export type Admin = AuthenticatedUser;
+export type Customer = AuthenticatedUser;
 
 export interface LoginCredentials {
   username: string;
   password: string;
-}
-
-export interface Customer {
-  username: string;
-  authorities: string[];
 }
 
 export interface RegisterCredentials {

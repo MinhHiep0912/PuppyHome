@@ -1,5 +1,5 @@
 import type {
-  Admin,
+  AuthenticatedUser,
   Customer,
   LoginCredentials,
   RegisterCredentials,
@@ -75,9 +75,9 @@ export async function fetchCsrfToken(): Promise<string> {
   return readCsrfCookie();
 }
 
-export async function loginAdmin(
+export async function loginUser(
   credentials: LoginCredentials,
-): Promise<Admin> {
+): Promise<AuthenticatedUser> {
   const csrfToken = await fetchCsrfToken();
 
   const response = await fetch("/api/auth/login", {
@@ -96,7 +96,7 @@ export async function loginAdmin(
     );
   }
 
-  return (await response.json()) as Admin;
+  return (await response.json()) as AuthenticatedUser;
 }
 
 export async function registerCustomer(
@@ -123,7 +123,7 @@ export async function registerCustomer(
   return (await response.json()) as Customer;
 }
 
-export async function getCurrentAdmin(): Promise<Admin | null> {
+export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
   const response = await fetch("/api/auth/me", {
     method: "GET",
     credentials: "same-origin",
@@ -142,10 +142,10 @@ export async function getCurrentAdmin(): Promise<Admin | null> {
     );
   }
 
-  return (await response.json()) as Admin;
+  return (await response.json()) as AuthenticatedUser;
 }
 
-export async function logoutAdmin(): Promise<void> {
+export async function logoutUser(): Promise<void> {
   const csrfToken = await fetchCsrfToken();
 
   const response = await fetch("/api/auth/logout", {

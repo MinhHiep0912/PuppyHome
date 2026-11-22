@@ -1,0 +1,10 @@
+.customer-shell .application-shell__workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.customer-shell .application-shell__main {
+  flex: 1;
+  padding-block: 8px 14px;
+}

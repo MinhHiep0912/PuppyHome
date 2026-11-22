@@ -85,6 +85,21 @@ describe("guest and login shell separation", () => {
     expect(screen.getByText("Form đăng nhập Admin")).toBeInTheDocument();
   });
 
+  it("keeps the public services route in the Guest shell", () => {
+    window.history.replaceState({}, "", "/services");
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { name: "Khám phá dịch vụ" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Dịch vụ & giá" }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      document.querySelector(".customer-shell"),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders the Customer registration form", () => {
     window.history.replaceState({}, "", "/register");
     render(<App />);
@@ -105,6 +120,49 @@ describe("guest and login shell separation", () => {
       expect(window.location.pathname).toBe("/admin/services");
     });
     expect(screen.getByText("Trang quản lý dịch vụ")).toBeInTheDocument();
+  });
+
+  it("moves a Customer session into the customer area shell", async () => {
+    window.history.replaceState({}, "", "/");
+    vi.mocked(useAuth).mockReturnValue({
+      ...baseAuthState,
+      customer: {
+        username: "customer@example.com",
+        authorities: ["ROLE_CUSTOMER"],
+      },
+    });
+
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { name: "Chào mừng, customer@example.com" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Tài khoản" }),
+    ).toHaveAttribute("href", "/customer/account");
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/customer/");
+    });
+  });
+
+  it("renders customer section routes inside the customer shell", () => {
+    window.history.replaceState({}, "", "/customer/account");
+    vi.mocked(useAuth).mockReturnValue({
+      ...baseAuthState,
+      customer: {
+        username: "customer@example.com",
+        authorities: ["ROLE_CUSTOMER"],
+      },
+    });
+
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { name: "Thông tin khách hàng" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Tài khoản" }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
   it("keeps logout failure in the role shell and exposes its error", () => {
