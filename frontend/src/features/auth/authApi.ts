@@ -1,4 +1,9 @@
-import type { Admin, LoginCredentials } from "./auth";
+import type {
+  Admin,
+  Customer,
+  LoginCredentials,
+  RegisterCredentials,
+} from "./auth";
 
 const CSRF_COOKIE_NAME = "XSRF-TOKEN";
 const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
@@ -92,6 +97,30 @@ export async function loginAdmin(
   }
 
   return (await response.json()) as Admin;
+}
+
+export async function registerCustomer(
+  credentials: RegisterCredentials,
+): Promise<Customer> {
+  const csrfToken = await fetchCsrfToken();
+
+  const response = await fetch("/api/auth/register", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      [CSRF_HEADER_NAME]: csrfToken,
+    },
+    body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getResponseErrorMessage(response, "Đăng ký không thành công."),
+    );
+  }
+
+  return (await response.json()) as Customer;
 }
 
 export async function getCurrentAdmin(): Promise<Admin | null> {

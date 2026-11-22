@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLoginForm } from "./features/auth/AdminLoginForm";
+import { CustomerRegistrationForm } from "./features/auth/CustomerRegistrationForm";
+import { registerCustomer } from "./features/auth/authApi";
 import { useAuth } from "./features/auth/useAuth";
 import { AdminServicesPage } from "./features/admin-services/AdminServicesPage";
 import { ApplicationShell } from "./features/shell/ApplicationShell";
@@ -19,16 +21,24 @@ function App() {
   const path = normalizedPath();
   const {
     admin,
+    customer,
     isCheckingSession,
     error: authError,
     login,
     logout,
   } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
   const canManageServices =
     admin?.authorities.includes("ROLE_ADMIN") ?? false;
 
   useEffect(() => {
+    if (!isCheckingSession && customer) {
+      if (path !== "/customer") {
+        window.history.replaceState({}, "", "/customer/");
+      }
+    }
+
     if (!isCheckingSession && admin && canManageServices) {
       if (path !== "/admin/services") {
         window.history.replaceState({}, "", "/admin/services");
@@ -38,7 +48,7 @@ function App() {
     if (!isCheckingSession && !admin && path.startsWith("/admin")) {
       window.history.replaceState({}, "", "/login");
     }
-  }, [admin, canManageServices, isCheckingSession, path]);
+  }, [admin, customer, canManageServices, isCheckingSession, path]);
 
   async function handleLogout(): Promise<void> {
     setIsLoggingOut(true);
@@ -57,6 +67,24 @@ function App() {
     await login(credentials);
   }
 
+  async function handleRegister(
+    credentials: Parameters<typeof registerCustomer>[0],
+  ): Promise<void> {
+    setRegistrationError(null);
+    try {
+      await registerCustomer(credentials);
+      window.history.replaceState({}, "", "/customer/");
+      window.location.reload();
+    } catch (caughtError: unknown) {
+      setRegistrationError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Đăng ký không thành công.",
+      );
+      throw caughtError;
+    }
+  }
+
   if (isCheckingSession) {
     return (
       <div className="app">
@@ -65,6 +93,18 @@ function App() {
           <p>Đang kiểm tra phiên đăng nhập...</p>
         </div>
       </div>
+    );
+  }
+
+  if (customer) {
+    return (
+      <GuestShell activePage="home">
+        <section className="guest-page-state" role="status" aria-labelledby="customer-heading">
+          <p className="guest-eyebrow">KHU VỰC CUSTOMER</p>
+          <h1 id="customer-heading">Chào mừng, {customer.username}</h1>
+          <p>Tài khoản đã được kích hoạt và phiên đăng nhập đang hoạt động.</p>
+        </section>
+      </GuestShell>
     );
   }
 
@@ -128,12 +168,10 @@ function App() {
   if (path === "/register") {
     return (
       <GuestShell activePage="home">
-        <section className="guest-page-state" role="status" aria-labelledby="register-heading">
-          <p className="guest-eyebrow">ĐĂNG KÝ</p>
-          <h1 id="register-heading">Chức năng đăng ký chưa khả dụng</h1>
-          <p>Luồng Customer/Employee và API đăng ký chưa được xác minh. Chưa tạo tài khoản giả.</p>
-          <a className="guest-secondary-action" href="/login">Đến trang đăng nhập</a>
-        </section>
+        <CustomerRegistrationForm
+          onRegister={handleRegister}
+          error={registrationError}
+        />
       </GuestShell>
     );
   }

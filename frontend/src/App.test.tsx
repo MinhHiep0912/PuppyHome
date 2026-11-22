@@ -15,12 +15,17 @@ vi.mock("./features/admin-services/AdminServicesPage", () => ({
   AdminServicesPage: () => <div>Trang quản lý dịch vụ</div>,
 }));
 
+vi.mock("./features/auth/authApi", () => ({
+  registerCustomer: vi.fn(),
+}));
+
 vi.mock("./features/service-catalog/serviceApi", () => ({
   getPublishedServices: vi.fn().mockResolvedValue([]),
 }));
 
 const baseAuthState = {
   admin: null,
+  customer: null,
   isCheckingSession: false,
   error: null,
   login: vi.fn(),
@@ -80,11 +85,11 @@ describe("guest and login shell separation", () => {
     expect(screen.getByText("Form đăng nhập Admin")).toBeInTheDocument();
   });
 
-  it("marks registration as unavailable without creating a fake account flow", () => {
+  it("renders the Customer registration form", () => {
     window.history.replaceState({}, "", "/register");
     render(<App />);
     expect(
-      screen.getByRole("heading", { name: "Chức năng đăng ký chưa khả dụng" }),
+      screen.getByRole("heading", { name: "Đăng ký tài khoản Customer" }),
     ).toBeInTheDocument();
   });
 

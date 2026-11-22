@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Admin, LoginCredentials } from "./auth";
+import type { Admin, Customer, LoginCredentials } from "./auth";
 import {
   getCurrentAdmin,
   loginAdmin as requestLoginAdmin,
@@ -12,6 +12,7 @@ function getErrorMessage(error: unknown, fallbackMessage: string): string {
 
 export function useAuth() {
   const [admin, setAdmin] = useState<Admin | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,9 +22,19 @@ export function useAuth() {
 
     try {
       const currentAdmin = await getCurrentAdmin();
-      setAdmin(currentAdmin);
+      if (currentAdmin?.authorities.includes("ROLE_ADMIN")) {
+        setAdmin(currentAdmin);
+        setCustomer(null);
+      } else if (currentAdmin?.authorities.includes("ROLE_CUSTOMER")) {
+        setAdmin(null);
+        setCustomer(currentAdmin as unknown as Customer);
+      } else {
+        setAdmin(null);
+        setCustomer(null);
+      }
     } catch (caughtError: unknown) {
       setAdmin(null);
+      setCustomer(null);
       setError(
         getErrorMessage(caughtError, "Không thể kiểm tra phiên quản trị."),
       );
@@ -38,7 +49,16 @@ export function useAuth() {
 
       try {
         const authenticatedAdmin = await requestLoginAdmin(credentials);
-        setAdmin(authenticatedAdmin);
+        if (authenticatedAdmin.authorities.includes("ROLE_ADMIN")) {
+          setAdmin(authenticatedAdmin);
+          setCustomer(null);
+        } else if (authenticatedAdmin.authorities.includes("ROLE_CUSTOMER")) {
+          setAdmin(null);
+          setCustomer(authenticatedAdmin as unknown as Customer);
+        } else {
+          setAdmin(null);
+          setCustomer(null);
+        }
       } catch (caughtError: unknown) {
         setError(getErrorMessage(caughtError, "Đăng nhập không thành công."));
         throw caughtError;
@@ -53,6 +73,7 @@ export function useAuth() {
     try {
       await requestLogoutAdmin();
       setAdmin(null);
+      setCustomer(null);
     } catch (caughtError: unknown) {
       setError(getErrorMessage(caughtError, "Đăng xuất không thành công."));
       throw caughtError;
@@ -67,11 +88,21 @@ export function useAuth() {
         const currentAdmin = await getCurrentAdmin();
 
         if (!cancelled) {
-          setAdmin(currentAdmin);
+          if (currentAdmin?.authorities.includes("ROLE_ADMIN")) {
+            setAdmin(currentAdmin);
+            setCustomer(null);
+          } else if (currentAdmin?.authorities.includes("ROLE_CUSTOMER")) {
+            setAdmin(null);
+            setCustomer(currentAdmin as unknown as Customer);
+          } else {
+            setAdmin(null);
+            setCustomer(null);
+          }
         }
       } catch (caughtError: unknown) {
         if (!cancelled) {
           setAdmin(null);
+          setCustomer(null);
           setError(
             getErrorMessage(caughtError, "Không thể kiểm tra phiên quản trị."),
           );
@@ -92,6 +123,7 @@ export function useAuth() {
 
   return {
     admin,
+    customer,
     isCheckingSession,
     error,
     login,
