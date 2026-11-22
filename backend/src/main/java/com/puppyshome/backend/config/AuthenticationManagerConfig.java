@@ -3,6 +3,7 @@ package com.puppyshome.backend.config;
 import java.util.List;
 
 import com.puppyshome.backend.auth.AdminUserDetailsService;
+import com.puppyshome.backend.auth.CustomerUserDetailsService;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,13 +18,17 @@ public class AuthenticationManagerConfig {
     @Bean
     AuthenticationManager authenticationManager(
             AdminUserDetailsService adminUserDetailsService,
+            CustomerUserDetailsService customerUserDetailsService,
             PasswordEncoder passwordEncoder
     ) {
-        DaoAuthenticationProvider provider =
+        DaoAuthenticationProvider adminProvider =
                 new DaoAuthenticationProvider(adminUserDetailsService);
+        adminProvider.setPasswordEncoder(passwordEncoder);
 
-        provider.setPasswordEncoder(passwordEncoder);
+        DaoAuthenticationProvider customerProvider =
+                new DaoAuthenticationProvider(customerUserDetailsService);
+        customerProvider.setPasswordEncoder(passwordEncoder);
 
-        return new ProviderManager(List.of(provider));
+        return new ProviderManager(List.of(adminProvider, customerProvider));
     }
 }
