@@ -56,6 +56,15 @@ public class SecurityConfig {
                                 "/api/auth/logout")
                         .permitAll()
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/game-accounts",
+                                "/api/game-accounts/**")
+                        .authenticated()
+                        .requestMatchers(
+                                "/api/game-accounts",
+                                "/api/game-accounts/**")
+                        .hasRole("CUSTOMER")
+                        .requestMatchers(
                                 "/api/admin/services",
                                 "/api/admin/services/**")
                         .hasRole("ADMIN")
