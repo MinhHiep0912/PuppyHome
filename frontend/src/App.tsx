@@ -5,6 +5,7 @@ import { registerCustomer } from "./features/auth/authApi";
 import { useAuth } from "./features/auth/useAuth";
 import { AdminServicesPage } from "./features/admin-services/AdminServicesPage";
 import { CustomerServicesPage } from "./features/customer-services/CustomerServicesPage";
+import { GameAccountsPage } from "./features/game-accounts/GameAccountsPage";
 import { ApplicationShell } from "./features/shell/ApplicationShell";
 import { CustomerShell } from "./features/shell/CustomerShell";
 import {
@@ -109,7 +110,9 @@ function App() {
             ? "services"
             : customerPath === "/customer/news"
               ? "news"
-              : customerPath === "/customer/account"
+              : customerPath === "/customer/game-accounts"
+                ? "game-accounts"
+                : customerPath === "/customer/account"
                 ? "account"
                 : "overview"
         }
@@ -129,6 +132,7 @@ function App() {
           </section>
         )}
         {customerPath === "/customer/services" && <CustomerServicesPage />}
+        {customerPath === "/customer/game-accounts" && <GameAccountsPage />}
         {customerPath === "/customer/news" && <GuestNewsPage />}
         {customerPath === "/customer/account" && (
           <section className="guest-page-state" aria-labelledby="customer-account-heading">
@@ -143,6 +147,7 @@ function App() {
             "/customer",
             "/customer/services",
             "/customer/news",
+            "/customer/game-accounts",
             "/customer/account",
           ].includes(customerPath) && (
           <section className="guest-page-state" role="alert">

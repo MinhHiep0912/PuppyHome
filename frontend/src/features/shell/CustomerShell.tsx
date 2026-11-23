@@ -3,7 +3,12 @@ import type { Customer } from "../auth/auth";
 import "./ApplicationShell.css";
 import "./CustomerShell.css";
 
-type CustomerPage = "overview" | "services" | "news" | "account";
+type CustomerPage =
+  | "overview"
+  | "services"
+  | "news"
+  | "game-accounts"
+  | "account";
 
 interface CustomerShellProps {
   customer: Customer;
@@ -23,6 +28,7 @@ const navigation: Array<{
   { page: "overview", href: "/customer/", label: "Tổng quan", icon: "⌂" },
   { page: "services", href: "/customer/services", label: "Dịch vụ & giá", icon: "▦" },
   { page: "news", href: "/customer/news", label: "Tin tức", icon: "▤" },
+  { page: "game-accounts", href: "/customer/game-accounts", label: "Tài khoản game", icon: "▣" },
   { page: "account", href: "/customer/account", label: "Tài khoản", icon: "◎" },
 ];
 
