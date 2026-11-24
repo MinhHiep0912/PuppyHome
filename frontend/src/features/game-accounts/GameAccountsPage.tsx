@@ -8,6 +8,13 @@ import {
   updateGameAccount,
 } from "./gameAccountApi";
 import "./GameAccountsPage.css";
+import type { InvitationCode, InvitationCodeInput } from "./invitationCode";
+import {
+  createInvitationCode,
+  deleteInvitationCode,
+  getInvitationCodes,
+  updateInvitationCode,
+} from "./invitationCodeApi";
 
 const EMPTY_FORM: GameAccountInput = {
   name: "",
@@ -25,6 +32,18 @@ export function GameAccountsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const [codesByAccount, setCodesByAccount] = useState<
+    Record<number, InvitationCode[]>
+  >({});
+  const [codeLoadingIds, setCodeLoadingIds] = useState<number[]>([]);
+  const [codeEditingId, setCodeEditingId] = useState<number | null>(null);
+  const [codeAccountId, setCodeAccountId] = useState<number | null>(null);
+  const [codeForm, setCodeForm] = useState<InvitationCodeInput>({
+    code: "",
+    note: "",
+  });
+  const [codeFormError, setCodeFormError] = useState<string | null>(null);
+  const [codeNotice, setCodeNotice] = useState<string | null>(null);
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -71,6 +90,35 @@ export function GameAccountsPage() {
       cancelled = true;
     };
   }, []);
+
+  const loadInvitationCodes = useCallback(async (accountId: number) => {
+    setCodeLoadingIds((current) =>
+      current.includes(accountId) ? current : [...current, accountId],
+    );
+    try {
+      const codes = await getInvitationCodes(accountId);
+      setCodesByAccount((current) => ({ ...current, [accountId]: codes }));
+      setError(null);
+    } catch (caughtError: unknown) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Không thể tải danh sách mã mời.",
+      );
+    } finally {
+      setCodeLoadingIds((current) =>
+        current.filter((id) => id !== accountId),
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    accounts.forEach((account) => {
+      if (!codesByAccount[account.id] && !codeLoadingIds.includes(account.id)) {
+        void loadInvitationCodes(account.id);
+      }
+    });
+  }, [accounts, codeLoadingIds, codesByAccount, loadInvitationCodes]);
 
   function startCreate(): void {
     setEditingId(null);
@@ -164,6 +212,90 @@ export function GameAccountsPage() {
         caughtError instanceof Error
           ? caughtError.message
           : "Không thể khôi phục tài khoản game.",
+      );
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  function startCodeCreate(account: GameAccount): void {
+    setCodeAccountId(account.id);
+    setCodeEditingId(null);
+    setCodeForm({ code: "", note: "" });
+    setCodeFormError(null);
+    setCodeNotice(null);
+  }
+
+  function startCodeEdit(code: InvitationCode): void {
+    setCodeAccountId(code.gameAccountId);
+    setCodeEditingId(code.id);
+    setCodeForm({ code: code.code, note: code.note ?? "" });
+    setCodeFormError(null);
+    setCodeNotice(null);
+  }
+
+  async function handleCodeSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    event.preventDefault();
+    if (codeAccountId === null) {
+      return;
+    }
+    const code = codeForm.code.trim();
+    if (!code) {
+      setCodeFormError("Mã mời không được để trống.");
+      return;
+    }
+    if (code.length > 128) {
+      setCodeFormError("Mã mời không được vượt quá 128 ký tự.");
+      return;
+    }
+    if ((codeForm.note ?? "").length > 255) {
+      setCodeFormError("Ghi chú không được vượt quá 255 ký tự.");
+      return;
+    }
+
+    setCodeFormError(null);
+    setIsSaving(true);
+    try {
+      const input = {
+        code,
+        note: (codeForm.note ?? "").trim() || undefined,
+      };
+      if (codeEditingId === null) {
+        await createInvitationCode(codeAccountId, input);
+        setCodeNotice("Đã tạo mã mời.");
+      } else {
+        await updateInvitationCode(codeEditingId, input);
+        setCodeNotice("Đã cập nhật mã mời.");
+      }
+      setCodeEditingId(null);
+      setCodeAccountId(null);
+      setCodeForm({ code: "", note: "" });
+      await loadInvitationCodes(codeAccountId);
+    } catch (caughtError: unknown) {
+      setCodeFormError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Không thể lưu mã mời.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleCodeDelete(code: InvitationCode): Promise<void> {
+    setPendingId(code.id);
+    setCodeNotice(null);
+    try {
+      await deleteInvitationCode(code.id);
+      setCodeNotice("Đã xóa mã mời.");
+      await loadInvitationCodes(code.gameAccountId);
+    } catch (caughtError: unknown) {
+      setCodeFormError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Không thể xóa mã mời.",
       );
     } finally {
       setPendingId(null);
@@ -299,6 +431,129 @@ export function GameAccountsPage() {
                   </button>
                 )}
               </div>
+              <section
+                className="invitation-codes"
+                aria-label={`Mã mời của ${account.name}`}
+              >
+                {codeNotice && (
+                  <p className="game-accounts__notice" role="status">
+                    {codeNotice}
+                  </p>
+                )}
+                <div className="invitation-codes__heading">
+                  <h3>Mã mời</h3>
+                  {account.status === "ACTIVE" && (
+                    <button type="button" onClick={() => startCodeCreate(account)}>
+                      Thêm mã mời
+                    </button>
+                  )}
+                </div>
+
+                {codeAccountId === account.id && (
+                  <form className="invitation-code-form" onSubmit={handleCodeSubmit}>
+                    <label>
+                      Mã mời
+                      <input
+                        type="text"
+                        value={codeForm.code}
+                        maxLength={128}
+                        required
+                        onChange={(event) =>
+                          setCodeForm((current) => ({
+                            ...current,
+                            code: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label>
+                      Ghi chú
+                      <input
+                        type="text"
+                        value={codeForm.note ?? ""}
+                        maxLength={255}
+                        onChange={(event) =>
+                          setCodeForm((current) => ({
+                            ...current,
+                            note: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    {codeFormError && (
+                      <p className="invitation-code-form__error" role="alert">
+                        {codeFormError}
+                      </p>
+                    )}
+                    <div className="invitation-code-form__actions">
+                      <button type="submit" disabled={isSaving}>
+                        {isSaving
+                          ? "Đang lưu..."
+                          : codeEditingId === null
+                            ? "Tạo mã"
+                            : "Lưu mã"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSaving}
+                        onClick={() => {
+                          setCodeAccountId(null);
+                          setCodeEditingId(null);
+                          setCodeFormError(null);
+                        }}
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {codeLoadingIds.includes(account.id) && (
+                  <p role="status">Đang tải mã mời...</p>
+                )}
+                {!codeLoadingIds.includes(account.id) &&
+                  (codesByAccount[account.id]?.length ?? 0) === 0 && (
+                    <p>Chưa có mã mời.</p>
+                  )}
+                {!codeLoadingIds.includes(account.id) &&
+                  (codesByAccount[account.id]?.length ?? 0) > 0 && (
+                    <table className="invitation-codes__table">
+                      <thead>
+                        <tr>
+                          <th>Mã</th>
+                          <th>Ghi chú</th>
+                          <th>Employee đã dùng</th>
+                          <th>Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {codesByAccount[account.id].map((code) => (
+                          <tr key={code.id}>
+                            <td>{code.code}</td>
+                            <td>{code.note ?? "—"}</td>
+                            <td>
+                              {code.usedByEmployeeName
+                                ? `${code.usedByEmployeeName} (${code.usedByEmployeeId})`
+                                : "—"}
+                            </td>
+                            <td>
+                              <button type="button" onClick={() => startCodeEdit(code)}>
+                                Sửa
+                              </button>
+                              <button
+                                type="button"
+                                disabled={pendingId === code.id}
+                                onClick={() => void handleCodeDelete(code)}
+                              >
+                                {pendingId === code.id ? "Đang xóa..." : "Xóa"}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+              </section>
             </li>
           ))}
         </ul>

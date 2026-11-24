@@ -9,6 +9,12 @@ import {
   updateGameAccount,
 } from "./gameAccountApi";
 import { GameAccountsPage } from "./GameAccountsPage";
+import {
+  createInvitationCode,
+  deleteInvitationCode,
+  getInvitationCodes,
+  updateInvitationCode,
+} from "./invitationCodeApi";
 
 vi.mock("./gameAccountApi", () => ({
   getGameAccounts: vi.fn(),
@@ -16,6 +22,13 @@ vi.mock("./gameAccountApi", () => ({
   updateGameAccount: vi.fn(),
   archiveGameAccount: vi.fn(),
   setGameAccountStatus: vi.fn(),
+}));
+
+vi.mock("./invitationCodeApi", () => ({
+  getInvitationCodes: vi.fn(),
+  createInvitationCode: vi.fn(),
+  updateInvitationCode: vi.fn(),
+  deleteInvitationCode: vi.fn(),
 }));
 
 const activeAccount: GameAccount = {
@@ -49,6 +62,30 @@ describe("GameAccountsPage", () => {
       ...archivedAccount,
       status: "ACTIVE",
     });
+    vi.mocked(getInvitationCodes).mockResolvedValue([]);
+    vi.mocked(createInvitationCode).mockResolvedValue({
+      id: 20,
+      gameAccountId: 1,
+      code: "NEW-CODE",
+      note: null,
+      usedByEmployeeId: null,
+      usedByEmployeeName: null,
+      usedAt: null,
+      createdAt: "2026-11-24T00:00:00",
+      updatedAt: "2026-11-24T00:00:00",
+    });
+    vi.mocked(updateInvitationCode).mockResolvedValue({
+      id: 20,
+      gameAccountId: 1,
+      code: "EDIT-CODE",
+      note: "Da sua",
+      usedByEmployeeId: null,
+      usedByEmployeeName: null,
+      usedAt: null,
+      createdAt: "2026-11-24T00:00:00",
+      updatedAt: "2026-11-24T00:00:00",
+    });
+    vi.mocked(deleteInvitationCode).mockResolvedValue(undefined);
   });
 
   it("shows loading then lists active and archived accounts", async () => {
@@ -189,5 +226,59 @@ describe("GameAccountsPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Tên tài khoản không được để trống.",
     );
+  });
+
+  it("lists, creates, edits and deletes invitation codes", async () => {
+    vi.mocked(getInvitationCodes).mockImplementation(async (accountId) =>
+      accountId === 1
+        ? [{
+        id: 20,
+        gameAccountId: 1,
+        code: "OLD-CODE",
+        note: "Ghi chú cũ",
+        usedByEmployeeId: 7,
+        usedByEmployeeName: "Employee Test",
+        usedAt: "2026-11-24T00:00:00",
+        createdAt: "2026-11-24T00:00:00",
+        updatedAt: "2026-11-24T00:00:00",
+      }]
+        : [],
+    );
+
+    render(<GameAccountsPage />);
+    expect(await screen.findByText("OLD-CODE")).toBeInTheDocument();
+    expect(screen.getByText("Employee Test (7)")).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Thêm mã mời" })[0]);
+    fireEvent.change(screen.getByLabelText("Mã mời"), {
+      target: { value: "NEW-CODE" },
+    });
+    fireEvent.change(screen.getByLabelText("Ghi chú"), {
+      target: { value: "Ghi chú mới" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Tạo mã" }));
+    await waitFor(() => {
+      expect(createInvitationCode).toHaveBeenCalledWith(1, {
+        code: "NEW-CODE",
+        note: "Ghi chú mới",
+      });
+    });
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Sửa" })[0]);
+    fireEvent.change(screen.getByLabelText("Mã mời"), {
+      target: { value: "EDIT-CODE" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu mã" }));
+    await waitFor(() => {
+      expect(updateInvitationCode).toHaveBeenCalledWith(20, {
+        code: "EDIT-CODE",
+        note: "Ghi chú cũ",
+      });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Xóa" }));
+    await waitFor(() => {
+      expect(deleteInvitationCode).toHaveBeenCalledWith(20);
+    });
   });
 });
