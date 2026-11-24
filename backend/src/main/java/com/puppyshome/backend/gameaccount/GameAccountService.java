@@ -1,5 +1,6 @@
 package com.puppyshome.backend.gameaccount;
 
+import com.puppyshome.backend.auth.AccessContextResolver;
 import com.puppyshome.backend.auth.CustomerEntity;
 import com.puppyshome.backend.auth.CustomerRepository;
 import com.puppyshome.backend.gameaccount.dto.GameAccountResponse;
@@ -11,7 +12,6 @@ import jakarta.persistence.PersistenceContext;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,15 +23,18 @@ public class GameAccountService {
 
     private final GameAccountRepository gameAccountRepository;
     private final CustomerRepository customerRepository;
+    private final AccessContextResolver accessContextResolver;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public GameAccountService(
             GameAccountRepository gameAccountRepository,
-            CustomerRepository customerRepository) {
+            CustomerRepository customerRepository,
+            AccessContextResolver accessContextResolver) {
         this.gameAccountRepository = gameAccountRepository;
         this.customerRepository = customerRepository;
+        this.accessContextResolver = accessContextResolver;
     }
 
     @Transactional(readOnly = true)
@@ -121,10 +124,7 @@ public class GameAccountService {
     }
 
     private boolean isAdmin(Authentication authentication) {
-        return authentication.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+        return accessContextResolver.isAdmin(authentication);
     }
 
     private Long resolveCustomerId(Authentication authentication) {
