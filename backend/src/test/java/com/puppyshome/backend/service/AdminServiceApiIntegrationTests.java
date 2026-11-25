@@ -183,6 +183,69 @@ class AdminServiceApiIntegrationTests {
     }
 
     @Test
+    @Transactional
+    void servicePriceIsValidatedAndReturnedByAdminAndPublicApis()
+            throws Exception {
+        String slug = "priced-service-" + randomSuffix();
+        String pricedService = """
+                {
+                    "name": "Priced Service",
+                    "slug": "%s",
+                    "sortOrder": 2,
+                    "priceAmount": 125000,
+                    "priceCurrency": "VND",
+                    "priceUnit": "ngày"
+                }
+                """.formatted(slug);
+
+        MvcResult result = mockMvc.perform(post("/api/admin/services")
+                        .with(admin()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pricedService))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.priceAmount").value(125000))
+                .andExpect(jsonPath("$.priceCurrency").value("VND"))
+                .andExpect(jsonPath("$.priceUnit").value("ngày"))
+                .andReturn();
+        long serviceId = Long.parseLong(
+                result.getResponse().getHeader("Location")
+                        .replace("/api/admin/services/", ""));
+
+        mockMvc.perform(put("/api/admin/services/{id}", serviceId)
+                        .with(admin()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pricedService.replace(
+                                "\"priceAmount\": 125000",
+                                "\"priceAmount\": 250000")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.priceAmount").value(250000));
+
+        mockMvc.perform(patch("/api/admin/services/{id}/status", serviceId)
+                        .with(admin()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLISHED\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/services"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("\"priceAmount\":250000")))
+                .andExpect(content().string(containsString("\"priceUnit\":\"ngày\"")));
+
+        mockMvc.perform(post("/api/admin/services")
+                        .with(admin()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "name": "Negative Price",
+                                    "slug": "negative-price-%s",
+                                    "sortOrder": 1,
+                                    "priceAmount": -1
+                                }
+                                """.formatted(randomSuffix())))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void missingServiceReturnsNotFound() throws Exception {
         mockMvc.perform(
                         delete("/api/admin/services/{id}", Long.MAX_VALUE)
