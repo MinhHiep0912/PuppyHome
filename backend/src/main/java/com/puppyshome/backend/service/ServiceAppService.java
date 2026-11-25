@@ -46,7 +46,10 @@ public class ServiceAppService {
                 request.description(),
                 request.imageUrl(),
                 DRAFT_STATUS,
-                request.sortOrder());
+                request.sortOrder(),
+                request.priceAmount(),
+                currencyOrDefault(request.priceCurrency()),
+                request.priceUnit());
 
         return toAdminResponse(serviceRepository.saveAndFlush(service));
     }
@@ -69,7 +72,10 @@ public class ServiceAppService {
                 request.shortDescription(),
                 request.description(),
                 request.imageUrl(),
-                request.sortOrder());
+                request.sortOrder(),
+                request.priceAmount(),
+                currencyOrDefault(request.priceCurrency()),
+                request.priceUnit());
 
         return toAdminResponse(serviceRepository.saveAndFlush(service));
     }
@@ -99,7 +105,10 @@ public class ServiceAppService {
                         service.getShortDescription(),
                         service.getDescription(),
                         service.getImageUrl(),
-                        service.getSortOrder()
+                        service.getSortOrder(),
+                        service.getPriceAmount(),
+                        service.getPriceCurrency(),
+                        service.getPriceUnit()
                 ))
                 .toList();
     }
@@ -120,6 +129,13 @@ public class ServiceAppService {
                 service.getDescription(),
                 service.getImageUrl(),
                 service.getStatus(),
-                service.getSortOrder());
+                service.getSortOrder(),
+                service.getPriceAmount(),
+                service.getPriceCurrency(),
+                service.getPriceUnit());
+    }
+
+    private String currencyOrDefault(String currency) {
+        return currency == null ? "VND" : currency;
     }
 }

@@ -1,5 +1,7 @@
 package com.puppyshome.backend.service.dto;
 
+import java.math.BigDecimal;
+
 public record PublicServiceResponse(
         Long id,
         String name,
@@ -7,6 +9,9 @@ public record PublicServiceResponse(
         String shortDescription,
         String description,
         String imageUrl,
-        int sortOrder
+        int sortOrder,
+        BigDecimal priceAmount,
+        String priceCurrency,
+        String priceUnit
 ) {
 }

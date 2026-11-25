@@ -61,6 +61,23 @@ public class SecurityConfig {
                                 "/api/game-accounts/**")
                         .authenticated()
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/service-requests",
+                                "/api/service-requests/**")
+                        .authenticated()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/service-requests")
+                        .hasRole("CUSTOMER")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/service-requests/*/cancel")
+                        .hasRole("CUSTOMER")
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/service-requests/*/status")
+                        .hasRole("ADMIN")
+                        .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/game-accounts/*/invitation-codes")
                         .hasAnyRole("CUSTOMER", "ADMIN")

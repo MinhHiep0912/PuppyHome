@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.time.LocalDateTime;
 
@@ -42,6 +43,15 @@ public class ServiceEntity {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
+    @Column(name = "price_amount", precision = 12, scale = 0)
+    private BigDecimal priceAmount;
+
+    @Column(name = "price_currency", length = 3)
+    private String priceCurrency;
+
+    @Column(name = "price_unit", length = 32)
+    private String priceUnit;
+
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -59,7 +69,10 @@ public class ServiceEntity {
             String description,
             String imageUrl,
             String status,
-            int sortOrder) {
+            int sortOrder,
+            BigDecimal priceAmount,
+            String priceCurrency,
+            String priceUnit) {
         this.name = name;
         this.slug = slug;
         this.shortDescription = shortDescription;
@@ -67,6 +80,9 @@ public class ServiceEntity {
         this.imageUrl = imageUrl;
         this.status = status;
         this.sortOrder = sortOrder;
+        this.priceAmount = priceAmount;
+        this.priceCurrency = priceCurrency;
+        this.priceUnit = priceUnit;
     }
 
     void updateDetails(
@@ -75,13 +91,19 @@ public class ServiceEntity {
             String shortDescription,
             String description,
             String imageUrl,
-            int sortOrder) {
+            int sortOrder,
+            BigDecimal priceAmount,
+            String priceCurrency,
+            String priceUnit) {
         this.name = name;
         this.slug = slug;
         this.shortDescription = shortDescription;
         this.description = description;
         this.imageUrl = imageUrl;
         this.sortOrder = sortOrder;
+        this.priceAmount = priceAmount;
+        this.priceCurrency = priceCurrency;
+        this.priceUnit = priceUnit;
     }
 
     void updateStatus(String status) {
@@ -118,6 +140,18 @@ public class ServiceEntity {
 
     public int getSortOrder() {
         return sortOrder;
+    }
+
+    public BigDecimal getPriceAmount() {
+        return priceAmount;
+    }
+
+    public String getPriceCurrency() {
+        return priceCurrency;
+    }
+
+    public String getPriceUnit() {
+        return priceUnit;
     }
 
     public LocalDateTime getCreatedAt() {
