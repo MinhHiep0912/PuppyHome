@@ -43,6 +43,9 @@ const draftService: AdminService = {
   imageUrl: null,
   status: "DRAFT",
   sortOrder: 1,
+  priceAmount: null,
+  priceCurrency: "VND",
+  priceUnit: null,
 };
 
 const publishedService: AdminService = {
@@ -154,6 +157,12 @@ describe("AdminServicesPage", () => {
     fireEvent.change(screen.getByLabelText("Slug"), {
       target: { value: "dich-vu-moi" },
     });
+    fireEvent.change(screen.getByLabelText("Giá (để trống nếu chưa có)"), {
+      target: { value: "125000" },
+    });
+    fireEvent.change(screen.getByLabelText("Đơn vị dịch vụ (tùy chọn)"), {
+      target: { value: "ngày" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Tạo dịch vụ" }));
 
     expect(
@@ -164,6 +173,9 @@ describe("AdminServicesPage", () => {
         name: "Dịch vụ mới",
         slug: "dich-vu-moi",
         sortOrder: 0,
+        priceAmount: 125000,
+        priceCurrency: "VND",
+        priceUnit: "ngày",
       }),
     );
 

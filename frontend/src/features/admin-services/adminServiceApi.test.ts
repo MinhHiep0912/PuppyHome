@@ -24,6 +24,9 @@ describe("adminServiceApi", () => {
           imageUrl: null,
           status: "DRAFT",
           sortOrder: 0,
+          priceAmount: 125000,
+          priceCurrency: "VND",
+          priceUnit: "ngày",
         }),
       );
     vi.stubGlobal("fetch", fetchMock);
@@ -35,6 +38,9 @@ describe("adminServiceApi", () => {
       description: null,
       imageUrl: null,
       sortOrder: 0,
+      priceAmount: 125000,
+      priceCurrency: "VND",
+      priceUnit: "ngày",
     });
 
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -89,6 +95,9 @@ describe("adminServiceApi", () => {
         description: null,
         imageUrl: null,
         sortOrder: 0,
+        priceAmount: null,
+        priceCurrency: "VND",
+        priceUnit: null,
       }),
     ).rejects.toMatchObject({
       name: "AdminServiceApiError",
