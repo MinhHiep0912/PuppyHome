@@ -6,6 +6,7 @@ import { useAuth } from "./features/auth/useAuth";
 import { AdminServicesPage } from "./features/admin-services/AdminServicesPage";
 import { CustomerServicesPage } from "./features/customer-services/CustomerServicesPage";
 import { GameAccountsPage } from "./features/game-accounts/GameAccountsPage";
+import { ServiceRequestsPage } from "./features/service-requests/ServiceRequestsPage";
 import { ApplicationShell } from "./features/shell/ApplicationShell";
 import { CustomerShell } from "./features/shell/CustomerShell";
 import {
@@ -45,7 +46,7 @@ function App() {
     }
 
     if (!isCheckingSession && admin && canManageServices) {
-      if (path !== "/admin/services") {
+      if (path !== "/admin/services" && path !== "/admin/service-requests") {
         window.history.replaceState({}, "", "/admin/services");
       }
     }
@@ -112,9 +113,11 @@ function App() {
               ? "news"
               : customerPath === "/customer/game-accounts"
                 ? "game-accounts"
-                : customerPath === "/customer/account"
-                ? "account"
-                : "overview"
+                : customerPath === "/customer/service-requests"
+                  ? "service-requests"
+                  : customerPath === "/customer/account"
+                    ? "account"
+                    : "overview"
         }
         isLoggingOut={isLoggingOut}
         logoutError={authError}
@@ -133,6 +136,9 @@ function App() {
         )}
         {customerPath === "/customer/services" && <CustomerServicesPage />}
         {customerPath === "/customer/game-accounts" && <GameAccountsPage />}
+        {customerPath === "/customer/service-requests" && (
+          <ServiceRequestsPage isAdmin={false} />
+        )}
         {customerPath === "/customer/news" && <GuestNewsPage />}
         {customerPath === "/customer/account" && (
           <section className="guest-page-state" aria-labelledby="customer-account-heading">
@@ -148,6 +154,7 @@ function App() {
             "/customer/services",
             "/customer/news",
             "/customer/game-accounts",
+            "/customer/service-requests",
             "/customer/account",
           ].includes(customerPath) && (
           <section className="guest-page-state" role="alert">
@@ -174,12 +181,17 @@ function App() {
     return (
       <ApplicationShell
         admin={admin}
+        activePage={
+          path === "/admin/service-requests" ? "service-requests" : "services"
+        }
         isLoggingOut={isLoggingOut}
         logoutError={authError}
         onLogout={() => void handleLogout()}
       >
         {path === "/admin/services" || path === "/" || path === "/services" || path === "/news" || path === "/login" ? (
           <AdminServicesPage />
+        ) : path === "/admin/service-requests" ? (
+          <ServiceRequestsPage isAdmin />
         ) : (
           <section className="state-panel" role="alert">
             <h1>Trang role chưa được triển khai</h1>

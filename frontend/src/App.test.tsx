@@ -15,6 +15,10 @@ vi.mock("./features/admin-services/AdminServicesPage", () => ({
   AdminServicesPage: () => <div>Trang quản lý dịch vụ</div>,
 }));
 
+vi.mock("./features/service-requests/ServiceRequestsPage", () => ({
+  ServiceRequestsPage: () => <div>Trang yêu cầu dịch vụ</div>,
+}));
+
 vi.mock("./features/auth/authApi", () => ({
   registerCustomer: vi.fn(),
 }));
@@ -64,6 +68,17 @@ describe("admin service route access", () => {
 
     render(<App />);
     expect(screen.getByText("Trang quản lý dịch vụ")).toBeInTheDocument();
+  });
+
+  it("renders the Service Request page for ROLE_ADMIN", () => {
+    window.history.replaceState({}, "", "/admin/service-requests");
+    vi.mocked(useAuth).mockReturnValue({
+      ...baseAuthState,
+      admin: { username: "admin", authorities: ["ROLE_ADMIN"] },
+    });
+
+    render(<App />);
+    expect(screen.getByText("Trang yêu cầu dịch vụ")).toBeInTheDocument();
   });
 });
 

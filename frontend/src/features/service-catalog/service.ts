@@ -6,4 +6,7 @@ export interface Service {
   description: string | null;
   imageUrl: string | null;
   sortOrder: number;
+  priceAmount: number | null;
+  priceCurrency: string | null;
+  priceUnit: string | null;
 }

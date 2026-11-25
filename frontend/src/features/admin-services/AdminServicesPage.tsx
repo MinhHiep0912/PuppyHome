@@ -21,6 +21,9 @@ interface ServiceFormValues {
   description: string;
   imageUrl: string;
   sortOrder: string;
+  priceAmount: string;
+  priceCurrency: string;
+  priceUnit: string;
 }
 
 const EMPTY_FORM: ServiceFormValues = {
@@ -30,6 +33,9 @@ const EMPTY_FORM: ServiceFormValues = {
   description: "",
   imageUrl: "",
   sortOrder: "0",
+  priceAmount: "",
+  priceCurrency: "VND",
+  priceUnit: "",
 };
 
 function getErrorMessage(error: unknown): string {
@@ -46,6 +52,11 @@ function toUpsertInput(values: ServiceFormValues): ServiceUpsertInput {
     description: values.description.trim() || null,
     imageUrl: values.imageUrl.trim() || null,
     sortOrder: Number(values.sortOrder),
+    priceAmount: values.priceAmount.trim() === ""
+      ? null
+      : Number(values.priceAmount),
+    priceCurrency: values.priceCurrency.trim().toUpperCase() || "VND",
+    priceUnit: values.priceUnit.trim() || null,
   };
 }
 
@@ -124,6 +135,11 @@ export function AdminServicesPage() {
       description: service.description ?? "",
       imageUrl: service.imageUrl ?? "",
       sortOrder: String(service.sortOrder),
+      priceAmount: service.priceAmount === null
+        ? ""
+        : String(service.priceAmount),
+      priceCurrency: service.priceCurrency ?? "VND",
+      priceUnit: service.priceUnit ?? "",
     });
     setFeedback(null);
     setActionError(null);
@@ -302,6 +318,7 @@ export function AdminServicesPage() {
                     <tr>
                       <th scope="col">Dịch vụ</th>
                       <th scope="col">Thứ tự</th>
+                      <th scope="col">Giá</th>
                       <th scope="col">Trạng thái</th>
                       <th scope="col">Thao tác</th>
                     </tr>
@@ -316,6 +333,11 @@ export function AdminServicesPage() {
                           </span>
                         </td>
                         <td>{service.sortOrder}</td>
+                        <td>
+                          {service.priceAmount === null
+                            ? "Chưa đặt giá"
+                            : `${new Intl.NumberFormat("vi-VN").format(service.priceAmount)} ${service.priceCurrency ?? "VND"}${service.priceUnit ? ` / ${service.priceUnit}` : ""}`}
+                        </td>
                         <td>
                           <span
                             className={`service-status service-status--${service.status.toLowerCase()}`}
@@ -415,6 +437,54 @@ export function AdminServicesPage() {
                     }))
                   }
                   required
+                  disabled={isSaving}
+                />
+              </label>
+              <label>
+                Giá (để trống nếu chưa có)
+                <input
+                  name="priceAmount"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formValues.priceAmount}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      priceAmount: event.target.value,
+                    }))
+                  }
+                  disabled={isSaving}
+                />
+              </label>
+              <label>
+                Đơn vị tiền tệ
+                <input
+                  name="priceCurrency"
+                  value={formValues.priceCurrency}
+                  maxLength={3}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      priceCurrency: event.target.value,
+                    }))
+                  }
+                  required={formValues.priceAmount.trim() !== ""}
+                  disabled={isSaving}
+                />
+              </label>
+              <label>
+                Đơn vị dịch vụ (tùy chọn)
+                <input
+                  name="priceUnit"
+                  value={formValues.priceUnit}
+                  maxLength={32}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      priceUnit: event.target.value,
+                    }))
+                  }
                   disabled={isSaving}
                 />
               </label>

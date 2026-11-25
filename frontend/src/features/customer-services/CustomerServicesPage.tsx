@@ -95,13 +95,20 @@ export function CustomerServicesPage() {
                       service.description ||
                       "Thông tin đang được cập nhật."}
                   </p>
+                  {service.priceAmount !== null && (
+                    <p className="customer-service-card__price">
+                      {new Intl.NumberFormat("vi-VN").format(service.priceAmount)}{" "}
+                      {service.priceCurrency ?? "VND"}
+                      {service.priceUnit ? ` / ${service.priceUnit}` : ""}
+                    </p>
+                  )}
                 </div>
               </article>
             ))}
           </div>
-          <p className="customer-services__notice">
-            Tính năng gửi yêu cầu dịch vụ sẽ có sau khi hoàn tất luồng đặt dịch vụ.
-          </p>
+          <a className="customer-services__notice" href="/customer/service-requests">
+            Gửi yêu cầu dịch vụ
+          </a>
         </>
       )}
     </section>

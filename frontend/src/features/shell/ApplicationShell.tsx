@@ -4,6 +4,7 @@ import "./ApplicationShell.css";
 
 interface ApplicationShellProps {
   admin: Admin;
+  activePage?: "services" | "service-requests";
   isLoggingOut: boolean;
   logoutError: string | null;
   onLogout: () => void;
@@ -12,6 +13,7 @@ interface ApplicationShellProps {
 
 export function ApplicationShell({
   admin,
+  activePage = "services",
   isLoggingOut,
   logoutError,
   onLogout,
@@ -85,11 +87,19 @@ export function ApplicationShell({
         <nav className="application-shell__nav" aria-label="Điều hướng quản trị">
           <a
             href="/admin/services"
-            aria-current="page"
-            className="application-shell__nav-item application-shell__nav-item--active"
+            aria-current={activePage === "services" ? "page" : undefined}
+            className={`application-shell__nav-item${activePage === "services" ? " application-shell__nav-item--active" : ""}`}
           >
             <span aria-hidden="true">▦</span>
             Dịch vụ &amp; giá
+          </a>
+          <a
+            href="/admin/service-requests"
+            aria-current={activePage === "service-requests" ? "page" : undefined}
+            className={`application-shell__nav-item${activePage === "service-requests" ? " application-shell__nav-item--active" : ""}`}
+          >
+            <span aria-hidden="true">◷</span>
+            Yêu cầu dịch vụ
           </a>
           <span className="application-shell__nav-item application-shell__nav-item--blocked">
             <span aria-hidden="true">◷</span>
@@ -110,7 +120,11 @@ export function ApplicationShell({
         <header className="application-shell__topbar">
           <div>
             <span className="application-shell__context">Khu vực quản trị</span>
-            <strong>Quản lý dịch vụ</strong>
+            <strong>
+              {activePage === "service-requests"
+                ? "Quản lý yêu cầu dịch vụ"
+                : "Quản lý dịch vụ"}
+            </strong>
           </div>
 
           <div className="application-shell__profile" ref={profileRef}>

@@ -1,0 +1,211 @@
+.service-requests {
+  display: grid;
+  gap: 20px;
+  padding: 8px 0 16px;
+  color: var(--text-body);
+}
+
+.service-requests__heading,
+.service-requests__state,
+.service-request-form,
+.service-requests__list {
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.service-requests__heading,
+.service-requests__state,
+.service-request-form,
+.service-requests__list {
+  padding: 24px;
+}
+
+.service-requests__eyebrow {
+  margin: 0 0 10px;
+  color: var(--sky-800);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.service-requests__heading h1 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(28px, 4vw, 40px);
+}
+
+.service-requests__heading > p:last-child {
+  margin-bottom: 0;
+  line-height: 1.6;
+}
+
+.service-request-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.service-request-form h2,
+.service-requests__list h2 {
+  margin: 0;
+  color: var(--text-strong);
+  grid-column: 1 / -1;
+}
+
+.service-request-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--sky-900);
+  font-weight: 650;
+}
+
+.service-request-form input,
+.service-request-form select,
+.service-request-form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(7, 89, 133, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 10px 12px;
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.service-request-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.service-request-form button,
+.service-requests__state button,
+.service-requests__actions button {
+  justify-self: start;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--sky-400), var(--sky-600));
+  padding: 9px 13px;
+  color: white;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.service-request-form button:disabled,
+.service-requests__actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.service-request-form__actions {
+  grid-column: 1 / -1;
+}
+
+.service-requests__hint {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.service-requests__table-wrap {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.service-requests table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.service-requests th,
+.service-requests td {
+  border-bottom: 1px solid rgba(7, 89, 133, 0.13);
+  padding: 12px 10px;
+  vertical-align: middle;
+}
+
+.service-requests th {
+  color: var(--sky-900);
+  font-size: 13px;
+}
+
+.service-requests td small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.service-requests__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.service-requests__actions button {
+  padding: 7px 9px;
+  font-size: 12px;
+}
+
+.service-request-status {
+  display: inline-block;
+  border-radius: 999px;
+  background: rgba(74, 114, 145, 0.14);
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.service-request-status--in_progress {
+  background: rgba(14, 116, 144, 0.14);
+  color: #155e75;
+}
+
+.service-request-status--done {
+  background: rgba(16, 122, 70, 0.13);
+  color: #17653f;
+}
+
+.service-request-status--cancelled {
+  background: rgba(180, 35, 24, 0.12);
+  color: #a32119;
+}
+
+.service-requests__notice,
+.service-requests__error {
+  margin: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.service-requests__notice {
+  border: 1px solid rgba(16, 122, 70, 0.25);
+  background: rgba(240, 253, 244, 0.72);
+  color: #17653f;
+}
+
+.service-requests__error,
+.service-requests__state--error {
+  border: 1px solid rgba(180, 35, 24, 0.25);
+  background: rgba(255, 245, 245, 0.72);
+  color: var(--danger);
+}
+
+@media (max-width: 700px) {
+  .service-request-form {
+    grid-template-columns: 1fr;
+  }
+
+  .service-requests__heading,
+  .service-requests__state,
+  .service-request-form,
+  .service-requests__list {
+    padding: 18px;
+  }
+}

@@ -67,6 +67,10 @@
   font: inherit;
 }
 
+.admin-service-form input[type="number"] {
+  appearance: textfield;
+}
+
 .admin-service-form textarea {
   min-height: 94px;
   resize: vertical;

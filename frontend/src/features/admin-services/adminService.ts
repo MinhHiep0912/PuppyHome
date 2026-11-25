@@ -9,6 +9,9 @@ export interface AdminService {
   imageUrl: string | null;
   status: ServiceStatus;
   sortOrder: number;
+  priceAmount: number | null;
+  priceCurrency: string | null;
+  priceUnit: string | null;
 }
 
 export interface ServiceUpsertInput {
@@ -18,4 +21,7 @@ export interface ServiceUpsertInput {
   description: string | null;
   imageUrl: string | null;
   sortOrder: number;
+  priceAmount: number | null;
+  priceCurrency: string;
+  priceUnit: string | null;
 }

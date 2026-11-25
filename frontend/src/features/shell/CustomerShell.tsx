@@ -8,6 +8,7 @@ type CustomerPage =
   | "services"
   | "news"
   | "game-accounts"
+  | "service-requests"
   | "account";
 
 interface CustomerShellProps {
@@ -29,6 +30,7 @@ const navigation: Array<{
   { page: "services", href: "/customer/services", label: "Dịch vụ & giá", icon: "▦" },
   { page: "news", href: "/customer/news", label: "Tin tức", icon: "▤" },
   { page: "game-accounts", href: "/customer/game-accounts", label: "Tài khoản game", icon: "▣" },
+  { page: "service-requests", href: "/customer/service-requests", label: "Yêu cầu dịch vụ", icon: "◷" },
   { page: "account", href: "/customer/account", label: "Tài khoản", icon: "◎" },
 ];
 
