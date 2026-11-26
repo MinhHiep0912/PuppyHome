@@ -158,10 +158,22 @@ describe("AdminServicesPage", () => {
       target: { value: "dich-vu-moi" },
     });
     fireEvent.change(screen.getByLabelText("Giá (để trống nếu chưa có)"), {
-      target: { value: "125000" },
+      target: { value: "125500" },
     });
     fireEvent.change(screen.getByLabelText("Đơn vị dịch vụ (tùy chọn)"), {
       target: { value: "ngày" },
+    });
+    const priceInput = screen.getByLabelText("Giá (để trống nếu chưa có)");
+    fireEvent.change(screen.getByLabelText("Đơn vị nhập giá"), {
+      target: { value: "K" },
+    });
+    expect(priceInput).toHaveValue(125.5);
+    fireEvent.change(screen.getByLabelText("Đơn vị nhập giá"), {
+      target: { value: "VND" },
+    });
+    expect(priceInput).toHaveValue(125500);
+    fireEvent.change(screen.getByLabelText("Đơn vị nhập giá"), {
+      target: { value: "K" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Tạo dịch vụ" }));
 
@@ -173,7 +185,7 @@ describe("AdminServicesPage", () => {
         name: "Dịch vụ mới",
         slug: "dich-vu-moi",
         sortOrder: 0,
-        priceAmount: 125000,
+        priceAmount: 125500,
         priceCurrency: "VND",
         priceUnit: "ngày",
       }),
@@ -229,9 +241,8 @@ describe("AdminServicesPage", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Tạo dịch vụ" }));
 
-    expect(
-      await screen.findByRole("alert"),
-    ).toHaveTextContent("Slug đã tồn tại (HTTP 409)");
+    expect(await screen.findByRole("alert"))
+      .toHaveTextContent("Slug đã tồn tại (HTTP 409)");
     expect(screen.queryByText(/Đã tạo dịch vụ/)).not.toBeInTheDocument();
   });
 });

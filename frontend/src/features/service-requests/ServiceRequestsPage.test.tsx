@@ -117,6 +117,7 @@ describe("ServiceRequestsPage", () => {
   it("allows customer cancellation only while NEW", async () => {
     render(<ServiceRequestsPage isAdmin={false} />);
     const row = await screen.findByRole("row", { name: /Chăm sóc/ });
+    expect(row).toHaveTextContent("Tài khoản A");
     fireEvent.click(within(row).getByRole("button", { name: "Hủy" }));
 
     expect(await screen.findByText("Đã hủy")).toBeInTheDocument();
@@ -142,7 +143,7 @@ describe("ServiceRequestsPage", () => {
       .toBeInTheDocument();
     expect(updateServiceRequestStatus).toHaveBeenCalledWith(1, "IN_PROGRESS");
     expect(getPublishedServices).not.toHaveBeenCalled();
-    expect(getGameAccounts).not.toHaveBeenCalled();
+    expect(getGameAccounts).toHaveBeenCalledOnce();
   });
 
   it("shows API failures and offers retry", async () => {

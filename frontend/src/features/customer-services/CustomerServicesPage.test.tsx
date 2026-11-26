@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPublishedServices } from "../service-catalog/serviceApi";
 import { CustomerServicesPage } from "./CustomerServicesPage";
@@ -46,6 +46,9 @@ describe("CustomerServicesPage", () => {
     expect(container.querySelectorAll(".customer-service-card")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "Gửi yêu cầu dịch vụ" }))
       .toHaveAttribute("href", "/customer/service-requests");
+    expect(screen.getByText("120k / ngày")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "VND" }));
+    expect(screen.getByText("120.000 VND / ngày")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /đăng nhập để tiếp tục/i }),
     ).not.toBeInTheDocument();
