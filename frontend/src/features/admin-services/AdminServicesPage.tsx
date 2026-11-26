@@ -12,6 +12,13 @@ import type {
   ServiceStatus,
   ServiceUpsertInput,
 } from "./adminService";
+import { ErrorBadge } from "../shared/ErrorBadge";
+import {
+  convertPriceInput,
+  formatServicePrice,
+  normalizePriceToVnd,
+  type PriceDisplayUnit,
+} from "../service-catalog/price";
 import "./AdminServicesPage.css";
 
 interface ServiceFormValues {
@@ -22,7 +29,7 @@ interface ServiceFormValues {
   imageUrl: string;
   sortOrder: string;
   priceAmount: string;
-  priceCurrency: string;
+  priceInputUnit: PriceDisplayUnit;
   priceUnit: string;
 }
 
@@ -34,7 +41,7 @@ const EMPTY_FORM: ServiceFormValues = {
   imageUrl: "",
   sortOrder: "0",
   priceAmount: "",
-  priceCurrency: "VND",
+  priceInputUnit: "VND",
   priceUnit: "",
 };
 
@@ -52,10 +59,11 @@ function toUpsertInput(values: ServiceFormValues): ServiceUpsertInput {
     description: values.description.trim() || null,
     imageUrl: values.imageUrl.trim() || null,
     sortOrder: Number(values.sortOrder),
-    priceAmount: values.priceAmount.trim() === ""
-      ? null
-      : Number(values.priceAmount),
-    priceCurrency: values.priceCurrency.trim().toUpperCase() || "VND",
+    priceAmount: normalizePriceToVnd(
+      values.priceAmount,
+      values.priceInputUnit,
+    ),
+    priceCurrency: "VND",
     priceUnit: values.priceUnit.trim() || null,
   };
 }
@@ -138,7 +146,7 @@ export function AdminServicesPage() {
       priceAmount: service.priceAmount === null
         ? ""
         : String(service.priceAmount),
-      priceCurrency: service.priceCurrency ?? "VND",
+      priceInputUnit: "VND",
       priceUnit: service.priceUnit ?? "",
     });
     setFeedback(null);
@@ -275,17 +283,14 @@ export function AdminServicesPage() {
       )}
 
       {!isLoading && loadError && (
-        <div className="state-panel state-panel--error" role="alert">
-          <h2>Chưa thể tải danh sách dịch vụ</h2>
-          <p>{loadError}</p>
+        <ErrorBadge message={loadError}>
           <button
-            className="retry-button"
             type="button"
             onClick={() => setRetryKey((current) => current + 1)}
           >
             Thử tải lại
           </button>
-        </div>
+        </ErrorBadge>
       )}
 
       {!isLoading && !loadError && (
@@ -296,9 +301,7 @@ export function AdminServicesPage() {
             </p>
           )}
           {actionError && (
-            <p className="admin-services__error" role="alert">
-              {actionError}
-            </p>
+            <ErrorBadge message={actionError} />
           )}
 
           <section
@@ -334,9 +337,12 @@ export function AdminServicesPage() {
                         </td>
                         <td>{service.sortOrder}</td>
                         <td>
-                          {service.priceAmount === null
-                            ? "Chưa đặt giá"
-                            : `${new Intl.NumberFormat("vi-VN").format(service.priceAmount)} ${service.priceCurrency ?? "VND"}${service.priceUnit ? ` / ${service.priceUnit}` : ""}`}
+                          {formatServicePrice(
+                            service.priceAmount,
+                            service.priceCurrency,
+                            service.priceUnit,
+                            "VND",
+                          )}
                         </td>
                         <td>
                           <span
@@ -446,7 +452,7 @@ export function AdminServicesPage() {
                   name="priceAmount"
                   type="number"
                   min="0"
-                  step="1"
+                  step={formValues.priceInputUnit === "K" ? "0.001" : "1"}
                   value={formValues.priceAmount}
                   onChange={(event) =>
                     setFormValues((current) => ({
@@ -458,20 +464,30 @@ export function AdminServicesPage() {
                 />
               </label>
               <label>
-                Đơn vị tiền tệ
-                <input
-                  name="priceCurrency"
-                  value={formValues.priceCurrency}
-                  maxLength={3}
+                Đơn vị nhập giá
+                <select
+                  name="priceInputUnit"
+                  value={formValues.priceInputUnit}
                   onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      priceCurrency: event.target.value,
-                    }))
+                    setFormValues((current) => {
+                      const nextUnit: PriceDisplayUnit =
+                        event.target.value === "K" ? "K" : "VND";
+                      return {
+                        ...current,
+                        priceAmount: convertPriceInput(
+                          current.priceAmount,
+                          current.priceInputUnit,
+                          nextUnit,
+                        ),
+                        priceInputUnit: nextUnit,
+                      };
+                    })
                   }
-                  required={formValues.priceAmount.trim() !== ""}
                   disabled={isSaving}
-                />
+                >
+                  <option value="VND">VND</option>
+                  <option value="K">Nghìn (k)</option>
+                </select>
               </label>
               <label>
                 Đơn vị dịch vụ (tùy chọn)

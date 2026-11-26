@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import type { Service } from "../service-catalog/service";
 import { getPublishedServices } from "../service-catalog/serviceApi";
+import { PriceDisplayUnitSelector } from "../service-catalog/PriceDisplayUnitSelector";
+import { formatServicePrice, type PriceDisplayUnit } from "../service-catalog/price";
+import { ErrorBadge } from "../shared/ErrorBadge";
 import "./CustomerServicesPage.css";
 
 export function CustomerServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const [displayUnit, setDisplayUnit] = useState<PriceDisplayUnit>("K");
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +40,13 @@ export function CustomerServicesPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryKey]);
+
+  function retryLoading(): void {
+    setIsLoading(true);
+    setError(null);
+    setRetryKey((current) => current + 1);
+  }
 
   return (
     <section
@@ -55,9 +66,11 @@ export function CustomerServicesPage() {
       )}
 
       {!isLoading && error && (
-        <div className="customer-services__state customer-services__state--error" role="alert">
-          {error}
-        </div>
+        <ErrorBadge message={error}>
+          <button type="button" onClick={retryLoading}>
+            Thử tải lại
+          </button>
+        </ErrorBadge>
       )}
 
       {!isLoading && !error && services.length === 0 && (
@@ -69,6 +82,7 @@ export function CustomerServicesPage() {
 
       {!isLoading && !error && services.length > 0 && (
         <>
+          <PriceDisplayUnitSelector value={displayUnit} onChange={setDisplayUnit} />
           <div className="customer-services__grid">
             {services.map((service) => (
               <article className="customer-service-card" key={service.id}>
@@ -97,9 +111,22 @@ export function CustomerServicesPage() {
                   </p>
                   {service.priceAmount !== null && (
                     <p className="customer-service-card__price">
-                      {new Intl.NumberFormat("vi-VN").format(service.priceAmount)}{" "}
-                      {service.priceCurrency ?? "VND"}
-                      {service.priceUnit ? ` / ${service.priceUnit}` : ""}
+                      {formatServicePrice(
+                        service.priceAmount,
+                        service.priceCurrency,
+                        service.priceUnit,
+                        displayUnit,
+                      )}
+                    </p>
+                  )}
+                  {service.priceAmount === null && (
+                    <p className="customer-service-card__price">
+                      {formatServicePrice(
+                        null,
+                        service.priceCurrency,
+                        service.priceUnit,
+                        displayUnit,
+                      )}
                     </p>
                   )}
                 </div>

@@ -1,0 +1,30 @@
+.price-unit-selector {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.price-unit-selector > span {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.price-unit-selector button {
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: var(--glass-bg);
+  padding: 7px 12px;
+  color: var(--sky-900);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.price-unit-selector button[aria-pressed="true"] {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--sky-400), var(--sky-600));
+  color: white;
+}

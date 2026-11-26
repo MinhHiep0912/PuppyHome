@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Service } from "../service-catalog/service";
 import { getPublishedServices } from "../service-catalog/serviceApi";
+import { ErrorBadge } from "../shared/ErrorBadge";
+import { PriceDisplayUnitSelector } from "../service-catalog/PriceDisplayUnitSelector";
+import { formatServicePrice, type PriceDisplayUnit } from "../service-catalog/price";
 import "./GuestPages.css";
 
 export function GuestHomePage() {
@@ -32,6 +35,8 @@ export function GuestServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const [displayUnit, setDisplayUnit] = useState<PriceDisplayUnit>("K");
 
   useEffect(() => {
     let cancelled = false;
@@ -48,7 +53,13 @@ export function GuestServicesPage() {
         if (!cancelled) setIsLoading(false);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [retryKey]);
+
+  function retryLoading(): void {
+    setIsLoading(true);
+    setError(null);
+    setRetryKey((current) => current + 1);
+  }
 
   return (
     <section className="guest-services" aria-labelledby="guest-services-heading">
@@ -59,28 +70,45 @@ export function GuestServicesPage() {
       </header>
 
       {isLoading && <div className="state-panel" role="status">Đang tải dịch vụ...</div>}
-      {!isLoading && error && <div className="state-panel state-panel--error" role="alert">{error}</div>}
+      {!isLoading && error && (
+        <ErrorBadge message={error}>
+          <button type="button" onClick={retryLoading}>
+            Thử tải lại
+          </button>
+        </ErrorBadge>
+      )}
       {!isLoading && !error && services.length === 0 && (
         <div className="state-panel"><h2>Chưa có dịch vụ công khai</h2><p>Dữ liệu sẽ xuất hiện khi dịch vụ được PUBLISHED.</p></div>
       )}
       {!isLoading && !error && services.length > 0 && (
-        <div className="guest-services__grid">
-          {services.map((service) => (
-            <article className="guest-service-card" key={service.id}>
-              {service.imageUrl ? (
-                <img src={service.imageUrl} alt={service.name} loading="lazy" />
-              ) : (
-                <div className="guest-service-card__placeholder" aria-hidden="true">PH</div>
-              )}
-              <div>
-                <span>DỊCH VỤ</span>
-                <h2>{service.name}</h2>
-                <p>{service.shortDescription || service.description || "Thông tin đang được cập nhật."}</p>
-                <a href="/login">Đăng nhập để tiếp tục</a>
-              </div>
-            </article>
-          ))}
-        </div>
+        <>
+          <PriceDisplayUnitSelector value={displayUnit} onChange={setDisplayUnit} />
+          <div className="guest-services__grid">
+            {services.map((service) => (
+              <article className="guest-service-card" key={service.id}>
+                {service.imageUrl ? (
+                  <img src={service.imageUrl} alt={service.name} loading="lazy" />
+                ) : (
+                  <div className="guest-service-card__placeholder" aria-hidden="true">PH</div>
+                )}
+                <div>
+                  <span>DỊCH VỤ</span>
+                  <h2>{service.name}</h2>
+                  <p>{service.shortDescription || service.description || "Thông tin đang được cập nhật."}</p>
+                  <p className="guest-service-card__price">
+                    {formatServicePrice(
+                      service.priceAmount,
+                      service.priceCurrency,
+                      service.priceUnit,
+                      displayUnit,
+                    )}
+                  </p>
+                  <a href="/login">Đăng nhập để tiếp tục</a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
       )}
     </section>
   );

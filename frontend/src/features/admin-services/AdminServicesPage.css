@@ -56,6 +56,7 @@
 }
 
 .admin-service-form input,
+.admin-service-form select,
 .admin-service-form textarea {
   width: 100%;
   min-width: 0;
@@ -77,6 +78,7 @@
 }
 
 .admin-service-form input:focus,
+.admin-service-form select:focus,
 .admin-service-form textarea:focus {
   outline: 3px solid rgba(56, 189, 248, 0.3);
   border-color: var(--sky-500);

@@ -3,6 +3,8 @@ import type { GameAccount } from "../game-accounts/gameAccount";
 import { getGameAccounts } from "../game-accounts/gameAccountApi";
 import type { Service } from "../service-catalog/service";
 import { getPublishedServices } from "../service-catalog/serviceApi";
+import { formatServicePrice } from "../service-catalog/price";
+import { ErrorBadge } from "../shared/ErrorBadge";
 import {
   cancelServiceRequest,
   createServiceRequest,
@@ -33,15 +35,6 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error
     ? error.message
     : "Đã xảy ra lỗi không xác định.";
-}
-
-function formatPrice(
-  amount: number,
-  currency: string,
-  unit: string,
-): string {
-  const value = new Intl.NumberFormat("vi-VN").format(amount);
-  return `${value} ${currency}${unit ? ` / ${unit}` : ""}`;
 }
 
 function formatDate(value: string | null): string {
@@ -88,8 +81,10 @@ export function ServiceRequestsPage({
       try {
         const requestData = await getServiceRequests();
         if (isAdmin) {
+          const accountData = await getGameAccounts();
           if (!cancelled) {
             setRequests(requestData);
+            setAccounts(accountData);
           }
         } else {
           const [serviceData, accountData] = await Promise.all([
@@ -99,7 +94,7 @@ export function ServiceRequestsPage({
           if (!cancelled) {
             setRequests(requestData);
             setServices(serviceData.filter((service) => service.priceAmount !== null));
-            setAccounts(accountData.filter((account) => account.status === "ACTIVE"));
+            setAccounts(accountData);
           }
         }
       } catch (error: unknown) {
@@ -200,7 +195,7 @@ export function ServiceRequestsPage({
       </header>
 
       {notice && <p className="service-requests__notice" role="status">{notice}</p>}
-      {actionError && <p className="service-requests__error" role="alert">{actionError}</p>}
+      {actionError && <ErrorBadge message={actionError} />}
 
       {isLoading && (
         <div className="service-requests__state" role="status">
@@ -209,12 +204,11 @@ export function ServiceRequestsPage({
       )}
 
       {!isLoading && loadError && (
-        <div className="service-requests__state service-requests__state--error" role="alert">
-          <p>{loadError}</p>
+        <ErrorBadge message={loadError}>
           <button type="button" onClick={() => setRetryKey((current) => current + 1)}>
             Thử tải lại
           </button>
-        </div>
+        </ErrorBadge>
       )}
 
       {!isLoading && !loadError && (
@@ -233,10 +227,11 @@ export function ServiceRequestsPage({
                   <option value="">Chọn dịch vụ có giá</option>
                   {services.map((service) => (
                     <option key={service.id} value={service.id}>
-                      {service.name} — {formatPrice(
-                        service.priceAmount ?? 0,
-                        service.priceCurrency ?? "VND",
-                        service.priceUnit ?? "",
+                      {service.name} — {formatServicePrice(
+                        service.priceAmount,
+                        service.priceCurrency,
+                        service.priceUnit,
+                        "VND",
                       )}
                     </option>
                   ))}
@@ -251,7 +246,7 @@ export function ServiceRequestsPage({
                   disabled={isSaving || accounts.length === 0}
                 >
                   <option value="">Chọn tài khoản đang hoạt động</option>
-                  {accounts.map((account) => (
+                  {accounts.filter((account) => account.status === "ACTIVE").map((account) => (
                     <option key={account.id} value={account.id}>
                       {account.name}
                     </option>
@@ -329,14 +324,16 @@ export function ServiceRequestsPage({
                         {isAdmin && <td>{request.customerId}</td>}
                         <td>
                           <strong>{request.snapshotServiceName}</strong>
-                          <small>{formatPrice(
+                          <small>{formatServicePrice(
                             request.snapshotPriceAmount,
                             request.snapshotCurrency,
                             request.snapshotPriceUnit,
+                            "VND",
                           )}</small>
                         </td>
                         <td>
-                          {request.gameAccountId}
+                          {accounts.find((account) => account.id === request.gameAccountId)?.name
+                            ?? `#${request.gameAccountId}`}
                           {request.notes && <small>{request.notes}</small>}
                         </td>
                         <td>

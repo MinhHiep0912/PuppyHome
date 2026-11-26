@@ -1,0 +1,31 @@
+.error-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(180, 35, 24, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 245, 245, 0.86);
+  padding: 11px 14px;
+  color: #a32119;
+  line-height: 1.5;
+}
+
+.error-badge button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(180, 35, 24, 0.25);
+  border-radius: 8px;
+  background: white;
+  padding: 6px 10px;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .error-badge {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
