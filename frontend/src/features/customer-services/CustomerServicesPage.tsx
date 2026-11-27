@@ -103,8 +103,8 @@ export function CustomerServicesPage() {
                 )}
                 <div className="customer-service-card__content">
                   <span className="customer-service-card__eyebrow">DỊCH VỤ</span>
-                  <h2>{service.name}</h2>
-                  <p>
+                  <h2 title={service.name}>{service.name}</h2>
+                  <p className="customer-service-card__description">
                     {service.shortDescription ||
                       service.description ||
                       "Thông tin đang được cập nhật."}
@@ -133,7 +133,10 @@ export function CustomerServicesPage() {
               </article>
             ))}
           </div>
-          <a className="customer-services__notice" href="/customer/service-requests">
+          <a
+            className="customer-services__floating-cta"
+            href="/customer/service-requests"
+          >
             Gửi yêu cầu dịch vụ
           </a>
         </>

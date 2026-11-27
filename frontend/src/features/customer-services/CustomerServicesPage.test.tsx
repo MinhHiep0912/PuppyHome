@@ -34,6 +34,20 @@ describe("CustomerServicesPage", () => {
         priceCurrency: "VND",
         priceUnit: null,
       },
+      {
+        id: 3,
+        name: "Dịch vụ có mô tả dài",
+        slug: "dich-vu-mo-ta-dai",
+        shortDescription:
+          "Mô tả dịch vụ dài để kiểm tra cách giới hạn số dòng trên thẻ dịch vụ. " +
+          "Nội dung dài cần không làm lệch kích thước các thẻ còn lại trong cùng một hàng.",
+        description: null,
+        imageUrl: null,
+        sortOrder: 3,
+        priceAmount: 250000,
+        priceCurrency: "VND",
+        priceUnit: "tuần",
+      },
     ]);
   });
 
@@ -43,9 +57,14 @@ describe("CustomerServicesPage", () => {
     expect(await screen.findByText("Dịch vụ Logacc")).toBeInTheDocument();
     expect(screen.getByText("Chăm sóc thú cưng")).toBeInTheDocument();
     expect(container.querySelector(".customer-services__grid")).not.toBeNull();
-    expect(container.querySelectorAll(".customer-service-card")).toHaveLength(2);
+    expect(container.querySelectorAll(".customer-service-card")).toHaveLength(3);
+    expect(
+      container.querySelector(".customer-service-card__description"),
+    ).toHaveClass("customer-service-card__description");
     expect(screen.getByRole("link", { name: "Gửi yêu cầu dịch vụ" }))
       .toHaveAttribute("href", "/customer/service-requests");
+    expect(screen.getByRole("link", { name: "Gửi yêu cầu dịch vụ" }))
+      .toHaveClass("customer-services__floating-cta");
     expect(screen.getByText("120k / ngày")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "VND" }));
     expect(screen.getByText("120.000 VND / ngày")).toBeInTheDocument();
