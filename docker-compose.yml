@@ -1,0 +1,66 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: puppyshome-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret_password}
+      MYSQL_DATABASE: ${DB_NAME:-puppys_home}
+      MYSQL_USER: ${DB_USERNAME:-puppy_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-puppy_secret_password}
+    ports:
+      - "${DB_PORT:-3307}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER -p$$MYSQL_PASSWORD || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: puppyshome-backend
+    restart: unless-stopped
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: puppys-home
+      DB_URL: jdbc:mysql://host.docker.internal:3306/${DB_NAME:-puppys_home}?serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8
+      DB_USERNAME: ${DB_USERNAME:-puppy_app}
+      DB_PASSWORD: ${DB_PASSWORD:-puppy_secret_password}
+      SERVER_PORT: 8080
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: puppyshome-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  db_data:
+    driver: local
