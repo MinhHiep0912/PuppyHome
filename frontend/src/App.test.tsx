@@ -30,6 +30,7 @@ vi.mock("./features/service-catalog/serviceApi", () => ({
 const baseAuthState = {
   admin: null,
   customer: null,
+  employee: null,
   isCheckingSession: false,
   error: null,
   login: vi.fn(),

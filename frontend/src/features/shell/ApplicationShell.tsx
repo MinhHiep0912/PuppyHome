@@ -4,7 +4,7 @@ import "./ApplicationShell.css";
 
 interface ApplicationShellProps {
   admin: Admin;
-  activePage?: "services" | "service-requests";
+  activePage?: "services" | "service-requests" | "employees" | "tasks";
   isLoggingOut: boolean;
   logoutError: string | null;
   onLogout: () => void;
@@ -101,6 +101,22 @@ export function ApplicationShell({
             <span aria-hidden="true">◷</span>
             Yêu cầu dịch vụ
           </a>
+          <a
+            href="/admin/employees"
+            aria-current={activePage === "employees" ? "page" : undefined}
+            className={`application-shell__nav-item${activePage === "employees" ? " application-shell__nav-item--active" : ""}`}
+          >
+            <span aria-hidden="true">♟</span>
+            Nhân viên
+          </a>
+          <a
+            href="/admin/tasks"
+            aria-current={activePage === "tasks" ? "page" : undefined}
+            className={`application-shell__nav-item${activePage === "tasks" ? " application-shell__nav-item--active" : ""}`}
+          >
+            <span aria-hidden="true">✓</span>
+            Công việc
+          </a>
           <span className="application-shell__nav-item application-shell__nav-item--blocked">
             <span aria-hidden="true">◷</span>
             Chức năng khác — chờ tích hợp
@@ -123,7 +139,11 @@ export function ApplicationShell({
             <strong>
               {activePage === "service-requests"
                 ? "Quản lý yêu cầu dịch vụ"
-                : "Quản lý dịch vụ"}
+                : activePage === "employees"
+                  ? "Quản lý nhân viên"
+                  : activePage === "tasks"
+                    ? "Quản lý công việc"
+                    : "Quản lý dịch vụ"}
             </strong>
           </div>
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AdminLoginForm } from "./features/auth/AdminLoginForm";
+import { EmployeeLoginForm } from "./features/auth/EmployeeLoginForm";
 import { CustomerRegistrationForm } from "./features/auth/CustomerRegistrationForm";
 import { registerCustomer } from "./features/auth/authApi";
 import { useAuth } from "./features/auth/useAuth";
@@ -7,6 +8,9 @@ import { AdminServicesPage } from "./features/admin-services/AdminServicesPage";
 import { CustomerServicesPage } from "./features/customer-services/CustomerServicesPage";
 import { GameAccountsPage } from "./features/game-accounts/GameAccountsPage";
 import { ServiceRequestsPage } from "./features/service-requests/ServiceRequestsPage";
+import { EmployeesPage } from "./features/employee/EmployeesPage";
+import { EmployeeShell } from "./features/employee/EmployeeShell";
+import { TasksPage } from "./features/tasks/TasksPage";
 import { ApplicationShell } from "./features/shell/ApplicationShell";
 import { CustomerShell } from "./features/shell/CustomerShell";
 import {
@@ -25,9 +29,12 @@ function App() {
   const path = normalizedPath();
   const isCustomerRoute = path === "/customer" || path.startsWith("/customer/");
   const customerPath = isCustomerRoute ? path : "/customer";
+  const isEmployeeRoute = path === "/employee" || path.startsWith("/employee/");
+  const employeePath = isEmployeeRoute ? path : "/employee";
   const {
     admin,
     customer,
+    employee,
     isCheckingSession,
     error: authError,
     login,
@@ -46,15 +53,46 @@ function App() {
     }
 
     if (!isCheckingSession && admin && canManageServices) {
-      if (path !== "/admin/services" && path !== "/admin/service-requests") {
+      if (
+        path !== "/admin/services" &&
+        path !== "/admin/service-requests" &&
+        path !== "/admin/employees" &&
+        path !== "/admin/tasks"
+      ) {
         window.history.replaceState({}, "", "/admin/services");
       }
     }
 
-    if (!isCheckingSession && !admin && path.startsWith("/admin")) {
+    if (!isCheckingSession && admin && isEmployeeRoute) {
+      window.history.replaceState({}, "", "/admin/services");
+    }
+
+    if (!isCheckingSession && employee && !isEmployeeRoute) {
+      window.history.replaceState({}, "", "/employee/");
+    }
+
+    if (
+      !isCheckingSession &&
+      employee &&
+      employeePath === "/employee/login"
+    ) {
+      window.history.replaceState({}, "", "/employee/");
+    }
+
+    if (!isCheckingSession && !admin && !employee && path.startsWith("/admin")) {
       window.history.replaceState({}, "", "/login");
     }
-  }, [admin, customer, canManageServices, isCheckingSession, isCustomerRoute, path]);
+  }, [
+    admin,
+    customer,
+    employee,
+    employeePath,
+    canManageServices,
+    isCheckingSession,
+    isCustomerRoute,
+    isEmployeeRoute,
+    path,
+  ]);
 
   async function handleLogout(): Promise<void> {
     setIsLoggingOut(true);
@@ -182,7 +220,13 @@ function App() {
       <ApplicationShell
         admin={admin}
         activePage={
-          path === "/admin/service-requests" ? "service-requests" : "services"
+          path === "/admin/service-requests"
+            ? "service-requests"
+            : path === "/admin/employees"
+              ? "employees"
+              : path === "/admin/tasks"
+                ? "tasks"
+                : "services"
         }
         isLoggingOut={isLoggingOut}
         logoutError={authError}
@@ -192,6 +236,10 @@ function App() {
           <AdminServicesPage />
         ) : path === "/admin/service-requests" ? (
           <ServiceRequestsPage isAdmin />
+        ) : path === "/admin/employees" ? (
+          <EmployeesPage />
+        ) : path === "/admin/tasks" ? (
+          <TasksPage isAdmin />
         ) : (
           <section className="state-panel" role="alert">
             <h1>Trang role chưa được triển khai</h1>
@@ -202,11 +250,49 @@ function App() {
     );
   }
 
-  if (path === "/login" || path.startsWith("/admin")) {
+  if (employee) {
+    return (
+      <EmployeeShell
+        employee={employee}
+        activePage={employeePath === "/employee/tasks" ? "tasks" : "overview"}
+        isLoggingOut={isLoggingOut}
+        logoutError={authError}
+        onLogout={() => void handleLogout()}
+      >
+        {employeePath === "/employee" && (
+          <section className="guest-page-state" aria-labelledby="employee-heading">
+            <p className="guest-eyebrow">KHU VỰC NHÂN VIÊN</p>
+            <h1 id="employee-heading">Chào mừng, {employee.username}</h1>
+            <p>Tài khoản nhân viên đã được kích hoạt và phiên đăng nhập đang hoạt động.</p>
+            <div className="guest-hero__actions">
+              <a className="guest-primary-action" href="/employee/tasks">Công việc của tôi</a>
+            </div>
+          </section>
+        )}
+        {employeePath === "/employee/tasks" && <TasksPage isAdmin={false} />}
+        {isEmployeeRoute &&
+          ![
+            "/employee",
+            "/employee/tasks",
+          ].includes(employeePath) && (
+          <section className="guest-page-state" role="alert">
+            <h1>Không tìm thấy trang</h1>
+            <p><a href="/employee/">Về tổng quan nhân viên</a></p>
+          </section>
+        )}
+      </EmployeeShell>
+    );
+  }
+
+  if (path === "/login" || path.startsWith("/admin") || isEmployeeRoute) {
     return (
       <GuestShell activePage="home">
         <section className="login-page" aria-labelledby="login-page-heading">
-          <AdminLoginForm onLogin={handleLogin} error={authError} />
+          {isEmployeeRoute ? (
+            <EmployeeLoginForm onLogin={handleLogin} error={authError} />
+          ) : (
+            <AdminLoginForm onLogin={handleLogin} error={authError} />
+          )}
         </section>
       </GuestShell>
     );
