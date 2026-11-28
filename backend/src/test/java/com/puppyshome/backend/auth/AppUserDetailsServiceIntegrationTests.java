@@ -2,6 +2,8 @@ package com.puppyshome.backend.auth;
 
 import java.util.UUID;
 
+import com.puppyshome.backend.support.TestUsers;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
-class AdminUserDetailsServiceIntegrationTests {
+class AppUserDetailsServiceIntegrationTests {
 
     @Autowired
-    private AdminUserDetailsService userDetailsService;
+    private AppUserDetailsService userDetailsService;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -37,7 +39,8 @@ class AdminUserDetailsServiceIntegrationTests {
         String rawPassword = "Test-Password-2026!";
         String passwordHash = passwordEncoder.encode(rawPassword);
 
-        insertAdmin(username, passwordHash, true);
+        TestUsers.ensureUser(
+                jdbcTemplate, username, "ADMIN", passwordHash, "ACTIVE");
 
         UserDetails userDetails =
                 userDetailsService.loadUserByUsername(username);
@@ -61,12 +64,13 @@ class AdminUserDetailsServiceIntegrationTests {
 
     @Test
     @Transactional
-    void marksInactiveAdminAsDisabled() {
+    void marksDisabledUserAsDisabled() {
         String username = testUsername("inactive");
         String passwordHash =
                 passwordEncoder.encode("Test-Password-2026!");
 
-        insertAdmin(username, passwordHash, false);
+        TestUsers.ensureUser(
+                jdbcTemplate, username, "ADMIN", passwordHash, "DISABLED");
 
         UserDetails userDetails =
                 userDetailsService.loadUserByUsername(username);
@@ -96,28 +100,6 @@ class AdminUserDetailsServiceIntegrationTests {
                         "Wrong-Password-2026!",
                         passwordHash
                 )
-        );
-    }
-
-    private void insertAdmin(
-            String username,
-            String passwordHash,
-            boolean active
-    ) {
-        jdbcTemplate.update(
-                """
-                INSERT INTO admins (
-                    username,
-                    password_hash,
-                    display_name,
-                    is_active
-                )
-                VALUES (?, ?, ?, ?)
-                """,
-                username,
-                passwordHash,
-                "Test Admin",
-                active
         );
     }
 

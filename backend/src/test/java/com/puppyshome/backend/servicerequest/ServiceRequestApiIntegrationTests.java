@@ -1,5 +1,7 @@
 package com.puppyshome.backend.servicerequest;
 
+import com.puppyshome.backend.support.TestUsers;
+
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -116,7 +118,7 @@ class ServiceRequestApiIntegrationTests {
                 result.getResponse().getHeader("Location")
                         .replace("/api/service-requests/", ""));
         Long customerId = jdbcTemplate.queryForObject(
-                "SELECT id FROM customers WHERE email = ?",
+                "SELECT id FROM users WHERE login_identifier = ?",
                 Long.class,
                 owner);
         assertEquals(1, jdbcTemplate.queryForObject(
@@ -234,7 +236,7 @@ class ServiceRequestApiIntegrationTests {
                 String.class,
                 requestId));
         assertEquals(jdbcTemplate.queryForObject(
-                        "SELECT id FROM customers WHERE email = ?",
+                        "SELECT id FROM users WHERE login_identifier = ?",
                         Long.class,
                         owner),
                 jdbcTemplate.queryForObject(
@@ -272,7 +274,7 @@ class ServiceRequestApiIntegrationTests {
                 String.class,
                 secondRequestId));
         assertEquals(jdbcTemplate.queryForObject(
-                        "SELECT id FROM admins WHERE username = 'request-admin'",
+                        "SELECT id FROM users WHERE login_identifier = 'request-admin'",
                         Long.class),
                 jdbcTemplate.queryForObject(
                         "SELECT status_actor_id FROM service_requests WHERE id = ?",
@@ -289,9 +291,14 @@ class ServiceRequestApiIntegrationTests {
         mockMvc.perform(get("/api/service-requests").with(customer(owner)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
+        Long ownerId = jdbcTemplate.queryForObject(
+                "SELECT id FROM users WHERE login_identifier = ?",
+                Long.class,
+                owner);
         mockMvc.perform(get("/api/service-requests").with(admin()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$[?(@.customerId == %d)]".formatted(ownerId))
+                        .value(org.hamcrest.Matchers.hasSize(2)));
     }
 
     private long createRequest(String email, long serviceId, long accountId)
@@ -335,7 +342,7 @@ class ServiceRequestApiIntegrationTests {
 
     private long insertAccount(String email, String status) {
         Long customerId = jdbcTemplate.queryForObject(
-                "SELECT id FROM customers WHERE email = ?", Long.class, email);
+                "SELECT id FROM users WHERE login_identifier = ?", Long.class, email);
         jdbcTemplate.update(
                 "INSERT INTO game_accounts (customer_id, name, nocape, status) VALUES (?, ?, false, ?)",
                 customerId,
@@ -349,18 +356,12 @@ class ServiceRequestApiIntegrationTests {
 
     private String insertCustomer(String suffix) {
         String email = suffix + "@example.com";
-        jdbcTemplate.update(
-                "INSERT INTO customers (email, password_hash, display_name, status) VALUES (?, 'test-hash', ?, 'ACTIVE')",
-                email,
-                "Customer " + suffix);
+        TestUsers.ensureCustomer(jdbcTemplate, email);
         return email;
     }
 
     private void insertAdmin(String username) {
-        jdbcTemplate.update(
-                "INSERT INTO admins (username, password_hash, display_name, is_active) VALUES (?, 'test-hash', ?, true)",
-                username,
-                username);
+        TestUsers.ensureUser(jdbcTemplate, username, "ADMIN");
     }
 
     private String createJson(long serviceId, long accountId) {
@@ -374,6 +375,7 @@ class ServiceRequestApiIntegrationTests {
     }
 
     private RequestPostProcessor admin() {
+        TestUsers.ensureUser(jdbcTemplate, "request-admin", "ADMIN");
         return user("request-admin").roles("ADMIN");
     }
 

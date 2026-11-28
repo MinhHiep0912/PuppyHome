@@ -2,6 +2,8 @@ package com.puppyshome.backend.auth;
 
 import java.util.UUID;
 
+import com.puppyshome.backend.support.TestUsers;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -111,21 +113,12 @@ class AuthenticationManagerIntegrationTests {
             String passwordHash,
             boolean active
     ) {
-        jdbcTemplate.update(
-                """
-                INSERT INTO admins (
-                    username,
-                    password_hash,
-                    display_name,
-                    is_active
-                )
-                VALUES (?, ?, ?, ?)
-                """,
+        TestUsers.ensureUser(
+                jdbcTemplate,
                 username,
+                "ADMIN",
                 passwordHash,
-                "Test Admin",
-                active
-        );
+                active ? "ACTIVE" : "DISABLED");
     }
 
     private String testUsername() {

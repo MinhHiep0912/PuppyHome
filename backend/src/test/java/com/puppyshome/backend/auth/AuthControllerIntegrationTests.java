@@ -2,6 +2,8 @@ package com.puppyshome.backend.auth;
 
 import java.util.UUID;
 
+import com.puppyshome.backend.support.TestUsers;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpSession;
 
@@ -261,20 +263,12 @@ class AuthControllerIntegrationTests {
             String username,
             String passwordHash,
             boolean active) {
-        jdbcTemplate.update(
-                """
-                        INSERT INTO admins (
-                                username,
-                                password_hash,
-                                display_name,
-                                is_active
-                        )
-                        VALUES (?, ?, ?, ?)
-                        """,
+        TestUsers.ensureUser(
+                jdbcTemplate,
                 username,
+                "ADMIN",
                 passwordHash,
-                "Test Admin",
-                active);
+                active ? "ACTIVE" : "DISABLED");
     }
 
     @Test

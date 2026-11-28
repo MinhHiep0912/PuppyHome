@@ -1,5 +1,7 @@
 package com.puppyshome.backend.gameaccount;
 
+import com.puppyshome.backend.support.TestUsers;
+
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -72,7 +74,7 @@ class GameAccountApiIntegrationTests {
                           AND REFERENCED_TABLE_NAME IS NOT NULL
                         """,
                 String.class);
-        assertEquals("customers", fkTarget);
+        assertEquals("users", fkTarget);
     }
 
     @Test
@@ -100,7 +102,7 @@ class GameAccountApiIntegrationTests {
                 .andExpect(jsonPath("$.customerId").isNumber());
 
         Long customerId = jdbcTemplate.queryForObject(
-                "SELECT id FROM customers WHERE email = ?",
+                "SELECT id FROM users WHERE login_identifier = ?",
                 Long.class,
                 email);
 
@@ -131,8 +133,8 @@ class GameAccountApiIntegrationTests {
                 """
                         SELECT COUNT(*)
                         FROM game_accounts ga
-                        JOIN customers c ON c.id = ga.customer_id
-                        WHERE c.email = ? AND ga.customer_id <> ?
+                        JOIN users u ON u.id = ga.customer_id
+                        WHERE u.login_identifier = ? AND ga.customer_id <> ?
                         """,
                 Integer.class,
                 email,
@@ -403,18 +405,13 @@ class GameAccountApiIntegrationTests {
     }
 
     private RequestPostProcessor admin() {
+        TestUsers.ensureUser(jdbcTemplate, "admin", "ADMIN");
         return user("admin").roles("ADMIN");
     }
 
     private String insertCustomer(String suffix) {
         String email = suffix + "@example.com";
-        jdbcTemplate.update(
-                """
-                        INSERT INTO customers (email, password_hash, display_name, status)
-                        VALUES (?, 'not-a-real-hash', ?, 'ACTIVE')
-                        """,
-                email,
-                "Customer " + suffix);
+        TestUsers.ensureCustomer(jdbcTemplate, email);
         return email;
     }
 

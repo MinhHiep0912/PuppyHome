@@ -1,5 +1,7 @@
 package com.puppyshome.backend.invitationcode;
 
+import com.puppyshome.backend.support.TestUsers;
+
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -39,13 +41,22 @@ class InvitationCodeApiIntegrationTests {
                 """
                         SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
                         WHERE TABLE_SCHEMA = DATABASE()
-                          AND TABLE_NAME = 'employees'
+                          AND TABLE_NAME = 'employee_profiles'
                           AND COLUMN_NAME IN (
-                              'id', 'employee_code', 'display_name',
-                              'work_status', 'created_at', 'updated_at')
+                              'user_id', 'employee_code', 'work_status',
+                              'skill_group', 'created_at', 'updated_at')
                         """,
                 Integer.class);
         assertEquals(6, employeeColumns);
+
+        Integer legacyTables = jdbcTemplate.queryForObject(
+                """
+                        SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+                        WHERE TABLE_SCHEMA = DATABASE()
+                          AND TABLE_NAME IN ('admins', 'customers', 'employees')
+                        """,
+                Integer.class);
+        assertEquals(0, legacyTables);
 
         Integer forbiddenColumns = jdbcTemplate.queryForObject(
                 """
@@ -238,6 +249,37 @@ class InvitationCodeApiIntegrationTests {
 
     @Test
     @Transactional
+    void employeeCanOnlyMarkUsedForSelf() throws Exception {
+        String email = insertCustomer("invite-emp-self-" + suffix());
+        long accountId = insertAccount(email);
+        long ownCodeId = insertCode(accountId, "SELF-USE");
+        long otherCodeId = insertCode(accountId, "OTHER-USE");
+        String ownCode = "EMP-SELF-" + suffix();
+        long employeeId = insertEmployee(ownCode, "Self Employee");
+        long otherEmployeeId = insertEmployee("EMP-OTHER-" + suffix(), "Other Employee");
+
+        mockMvc.perform(post("/api/invitation-codes/{codeId}/mark-used", ownCodeId)
+                        .with(user(ownCode).roles("EMPLOYEE")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"employeeId\":" + otherEmployeeId + "}"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/invitation-codes/{codeId}/mark-used", ownCodeId)
+                        .with(user(ownCode).roles("EMPLOYEE")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"employeeId\":" + employeeId + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usedByEmployeeId").value(employeeId));
+
+        mockMvc.perform(post("/api/invitation-codes/{codeId}/mark-used", otherCodeId)
+                        .with(user(ownCode).roles("EMPLOYEE")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"employeeId\":" + employeeId + "}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Transactional
     void adminEmployeesListCreateAndDuplicateCode() throws Exception {
         String duplicateCode = "EMP-DUP-" + suffix();
         long employeeId = insertEmployee(duplicateCode, "Employee One");
@@ -251,7 +293,8 @@ class InvitationCodeApiIntegrationTests {
                         .with(admin()).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"employeeCode\":\"EMP-NEW-" + suffix()
-                                + "\",\"displayName\":\"Employee New\"}"))
+                                + "\",\"displayName\":\"Employee New\","
+                                + "\"password\":\"TempPass123\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.workStatus").value("ACTIVE"));
 
@@ -259,14 +302,15 @@ class InvitationCodeApiIntegrationTests {
                         .with(admin()).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"employeeCode\":\"" + duplicateCode
-                                + "\",\"displayName\":\"Duplicate\"}"))
+                                + "\",\"displayName\":\"Duplicate\","
+                                + "\"password\":\"TempPass123\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.detail").value("EMPLOYEE_CODE_EXISTS"));
     }
 
     private long insertAccount(String email) {
         Long customerId = jdbcTemplate.queryForObject(
-                "SELECT id FROM customers WHERE email = ?", Long.class, email);
+                "SELECT id FROM users WHERE login_identifier = ?", Long.class, email);
         jdbcTemplate.update(
                 "INSERT INTO game_accounts (customer_id, name, nocape, status) VALUES (?, 'Test account', false, 'ACTIVE')",
                 customerId);
@@ -282,20 +326,12 @@ class InvitationCodeApiIntegrationTests {
     }
 
     private long insertEmployee(String code, String name) {
-        jdbcTemplate.update(
-                "INSERT INTO employees (employee_code, display_name, work_status) VALUES (?, ?, 'ACTIVE')",
-                code,
-                name);
-        return jdbcTemplate.queryForObject(
-                "SELECT id FROM employees WHERE employee_code = ?", Long.class, code);
+        return TestUsers.ensureEmployee(jdbcTemplate, code, name);
     }
 
     private String insertCustomer(String suffix) {
         String email = suffix + "@example.com";
-        jdbcTemplate.update(
-                "INSERT INTO customers (email, password_hash, display_name, status) VALUES (?, 'not-a-real-hash', ?, 'ACTIVE')",
-                email,
-                "Customer " + suffix);
+        TestUsers.ensureCustomer(jdbcTemplate, email);
         return email;
     }
 
@@ -304,6 +340,7 @@ class InvitationCodeApiIntegrationTests {
     }
 
     private RequestPostProcessor admin() {
+        TestUsers.ensureUser(jdbcTemplate, "admin", "ADMIN");
         return user("admin").roles("ADMIN");
     }
 
