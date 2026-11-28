@@ -3,6 +3,7 @@ import type {
   Admin,
   AuthenticatedUser,
   Customer,
+  Employee,
   LoginCredentials,
 } from "./auth";
 import { getCurrentUser, loginUser, logoutUser } from "./authApi";
@@ -14,6 +15,7 @@ function getErrorMessage(error: unknown, fallbackMessage: string): string {
 export function useAuth() {
   const [admin, setAdmin] = useState<Admin | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,12 +24,19 @@ export function useAuth() {
       if (user?.authorities.includes("ROLE_ADMIN")) {
         setAdmin(user);
         setCustomer(null);
+        setEmployee(null);
+      } else if (user?.authorities.includes("ROLE_EMPLOYEE")) {
+        setAdmin(null);
+        setCustomer(null);
+        setEmployee(user);
       } else if (user?.authorities.includes("ROLE_CUSTOMER")) {
         setAdmin(null);
         setCustomer(user);
+        setEmployee(null);
       } else {
         setAdmin(null);
         setCustomer(null);
+        setEmployee(null);
       }
     },
     [],
@@ -43,6 +52,7 @@ export function useAuth() {
     } catch (caughtError: unknown) {
       setAdmin(null);
       setCustomer(null);
+      setEmployee(null);
       setError(
         getErrorMessage(caughtError, "Không thể kiểm tra phiên đăng nhập."),
       );
@@ -73,6 +83,7 @@ export function useAuth() {
       await logoutUser();
       setAdmin(null);
       setCustomer(null);
+      setEmployee(null);
     } catch (caughtError: unknown) {
       setError(getErrorMessage(caughtError, "Đăng xuất không thành công."));
       throw caughtError;
@@ -93,6 +104,7 @@ export function useAuth() {
         if (!cancelled) {
           setAdmin(null);
           setCustomer(null);
+          setEmployee(null);
           setError(
             getErrorMessage(caughtError, "Không thể kiểm tra phiên đăng nhập."),
           );
@@ -114,6 +126,7 @@ export function useAuth() {
   return {
     admin,
     customer,
+    employee,
     isCheckingSession,
     error,
     login,

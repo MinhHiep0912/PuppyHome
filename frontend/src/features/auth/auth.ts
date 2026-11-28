@@ -5,6 +5,7 @@ export interface AuthenticatedUser {
 
 export type Admin = AuthenticatedUser;
 export type Customer = AuthenticatedUser;
+export type Employee = AuthenticatedUser;
 
 export interface LoginCredentials {
   username: string;
