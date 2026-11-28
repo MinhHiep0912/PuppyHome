@@ -1,8 +1,8 @@
 package com.puppyshome.backend.gameaccount;
 
 import com.puppyshome.backend.auth.AccessContextResolver;
-import com.puppyshome.backend.auth.CustomerEntity;
-import com.puppyshome.backend.auth.CustomerRepository;
+import com.puppyshome.backend.auth.UserEntity;
+import com.puppyshome.backend.auth.UserRepository;
 import com.puppyshome.backend.gameaccount.dto.GameAccountResponse;
 import com.puppyshome.backend.gameaccount.dto.GameAccountStatusRequest;
 import com.puppyshome.backend.gameaccount.dto.GameAccountUpsertRequest;
@@ -22,7 +22,7 @@ import java.util.List;
 public class GameAccountService {
 
     private final GameAccountRepository gameAccountRepository;
-    private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
     private final AccessContextResolver accessContextResolver;
 
     @PersistenceContext
@@ -30,10 +30,10 @@ public class GameAccountService {
 
     public GameAccountService(
             GameAccountRepository gameAccountRepository,
-            CustomerRepository customerRepository,
+            UserRepository userRepository,
             AccessContextResolver accessContextResolver) {
         this.gameAccountRepository = gameAccountRepository;
-        this.customerRepository = customerRepository;
+        this.userRepository = userRepository;
         this.accessContextResolver = accessContextResolver;
     }
 
@@ -68,7 +68,7 @@ public class GameAccountService {
     public GameAccountResponse createGameAccount(
             Authentication authentication,
             GameAccountUpsertRequest request) {
-        CustomerEntity customer = getRequiredCustomer(authentication);
+        UserEntity customer = getRequiredCustomer(authentication);
 
         GameAccountEntity account = new GameAccountEntity(
                 customer,
@@ -131,9 +131,9 @@ public class GameAccountService {
         return getRequiredCustomer(authentication).getId();
     }
 
-    private CustomerEntity getRequiredCustomer(Authentication authentication) {
-        return customerRepository
-                .findByEmail(authentication.getName())
+    private UserEntity getRequiredCustomer(Authentication authentication) {
+        return userRepository
+                .findByLoginIdentifier(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Không tìm thấy Customer."));

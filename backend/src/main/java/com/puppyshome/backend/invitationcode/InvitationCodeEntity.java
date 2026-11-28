@@ -1,6 +1,6 @@
 package com.puppyshome.backend.invitationcode;
 
-import com.puppyshome.backend.employee.EmployeeEntity;
+import com.puppyshome.backend.employee.EmployeeProfileEntity;
 import com.puppyshome.backend.gameaccount.GameAccountEntity;
 
 import jakarta.persistence.Column;
@@ -35,7 +35,7 @@ public class InvitationCodeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "used_by_employee_id")
-    private EmployeeEntity usedByEmployee;
+    private EmployeeProfileEntity usedByEmployee;
 
     @Column(name = "used_at")
     private LocalDateTime usedAt;
@@ -67,7 +67,7 @@ public class InvitationCodeEntity {
         this.deletedAt = timestamp;
     }
 
-    public void markUsed(EmployeeEntity employee, LocalDateTime timestamp) {
+    public void markUsed(EmployeeProfileEntity employee, LocalDateTime timestamp) {
         this.usedByEmployee = employee;
         this.usedAt = timestamp;
     }
@@ -88,7 +88,7 @@ public class InvitationCodeEntity {
         return note;
     }
 
-    public EmployeeEntity getUsedByEmployee() {
+    public EmployeeProfileEntity getUsedByEmployee() {
         return usedByEmployee;
     }
 

@@ -1,6 +1,6 @@
 package com.puppyshome.backend.gameaccount;
 
-import com.puppyshome.backend.auth.CustomerEntity;
+import com.puppyshome.backend.auth.UserEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,7 +28,7 @@ public class GameAccountEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
-    private CustomerEntity customer;
+    private UserEntity customer;
 
     @Column(name = "name", nullable = false, length = 128)
     private String name;
@@ -50,7 +50,7 @@ public class GameAccountEntity {
     }
 
     GameAccountEntity(
-            CustomerEntity customer,
+            UserEntity customer,
             String name,
             boolean nocape) {
         this.customer = customer;

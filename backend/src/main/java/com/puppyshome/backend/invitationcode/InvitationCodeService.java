@@ -2,8 +2,8 @@ package com.puppyshome.backend.invitationcode;
 
 import com.puppyshome.backend.auth.AccessContext;
 import com.puppyshome.backend.auth.AccessContextResolver;
-import com.puppyshome.backend.employee.EmployeeEntity;
-import com.puppyshome.backend.employee.EmployeeRepository;
+import com.puppyshome.backend.employee.EmployeeProfileEntity;
+import com.puppyshome.backend.employee.EmployeeProfileRepository;
 import com.puppyshome.backend.gameaccount.GameAccountEntity;
 import com.puppyshome.backend.gameaccount.GameAccountRepository;
 import com.puppyshome.backend.invitationcode.dto.InvitationCodeResponse;
@@ -26,7 +26,7 @@ public class InvitationCodeService {
 
     private final InvitationCodeRepository invitationCodeRepository;
     private final GameAccountRepository gameAccountRepository;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeProfileRepository employeeProfileRepository;
     private final AccessContextResolver accessContextResolver;
 
     @PersistenceContext
@@ -35,11 +35,11 @@ public class InvitationCodeService {
     public InvitationCodeService(
             InvitationCodeRepository invitationCodeRepository,
             GameAccountRepository gameAccountRepository,
-            EmployeeRepository employeeRepository,
+            EmployeeProfileRepository employeeProfileRepository,
             AccessContextResolver accessContextResolver) {
         this.invitationCodeRepository = invitationCodeRepository;
         this.gameAccountRepository = gameAccountRepository;
-        this.employeeRepository = employeeRepository;
+        this.employeeProfileRepository = employeeProfileRepository;
         this.accessContextResolver = accessContextResolver;
     }
 
@@ -103,7 +103,10 @@ public class InvitationCodeService {
     }
 
     @Transactional
-    public InvitationCodeResponse markUsed(Long codeId, Long employeeId) {
+    public InvitationCodeResponse markUsed(
+            Authentication authentication,
+            Long codeId,
+            Long employeeId) {
         InvitationCodeEntity code = invitationCodeRepository.findByIdAndDeletedAtIsNull(codeId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -115,7 +118,14 @@ public class InvitationCodeService {
                     "CODE_ALREADY_USED");
         }
 
-        EmployeeEntity employee = employeeRepository.findById(employeeId)
+        AccessContext context = accessContextResolver.resolve(authentication);
+        if (!context.admin() && !context.userId().equals(employeeId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "EMPLOYEE_MISMATCH");
+        }
+
+        EmployeeProfileEntity employee = employeeProfileRepository.findById(employeeId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Không tìm thấy Employee."));
@@ -150,7 +160,7 @@ public class InvitationCodeService {
     private void ensureAccessible(Authentication authentication, GameAccountEntity account) {
         AccessContext context = accessContextResolver.resolve(authentication);
         if (!context.admin()
-                && !account.getCustomerId().equals(context.customerId())) {
+                && !account.getCustomerId().equals(context.userId())) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Không tìm thấy Game Account.");
@@ -162,7 +172,7 @@ public class InvitationCodeService {
     }
 
     private InvitationCodeResponse toResponse(InvitationCodeEntity code) {
-        EmployeeEntity employee = code.getUsedByEmployee();
+        EmployeeProfileEntity employee = code.getUsedByEmployee();
         return new InvitationCodeResponse(
                 code.getId(),
                 code.getGameAccount().getId(),

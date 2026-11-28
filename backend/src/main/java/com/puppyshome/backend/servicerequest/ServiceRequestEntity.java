@@ -1,6 +1,6 @@
 package com.puppyshome.backend.servicerequest;
 
-import com.puppyshome.backend.auth.CustomerEntity;
+import com.puppyshome.backend.auth.UserEntity;
 import com.puppyshome.backend.gameaccount.GameAccountEntity;
 import com.puppyshome.backend.service.ServiceEntity;
 import jakarta.persistence.Column;
@@ -32,7 +32,7 @@ public class ServiceRequestEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
-    private CustomerEntity customer;
+    private UserEntity customer;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "game_account_id", nullable = false)
@@ -88,7 +88,7 @@ public class ServiceRequestEntity {
     }
 
     ServiceRequestEntity(
-            CustomerEntity customer,
+            UserEntity customer,
             GameAccountEntity gameAccount,
             ServiceEntity service,
             BigDecimal snapshotPriceAmount,

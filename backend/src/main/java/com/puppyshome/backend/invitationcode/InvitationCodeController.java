@@ -71,9 +71,11 @@ public class InvitationCodeController {
 
     @PostMapping("/api/invitation-codes/{codeId}/mark-used")
     public InvitationCodeResponse markUsed(
+            Authentication authentication,
             @PathVariable Long codeId,
             @Valid @RequestBody MarkUsedRequest request) {
-        return invitationCodeService.markUsed(codeId, request.employeeId());
+        return invitationCodeService.markUsed(
+                authentication, codeId, request.employeeId());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
