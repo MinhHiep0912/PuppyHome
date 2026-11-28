@@ -5,8 +5,6 @@ import java.util.List;
 import com.puppyshome.backend.auth.dto.LoginRequest;
 import com.puppyshome.backend.auth.dto.LoginResponse;
 import com.puppyshome.backend.auth.dto.RegisterRequest;
-import com.puppyshome.backend.auth.CustomerEntity;
-import com.puppyshome.backend.auth.CustomerRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -40,28 +40,35 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
-    private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
+    private final CustomerProfileRepository customerProfileRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AuthController(
             AuthenticationManager authenticationManager,
             SecurityContextRepository securityContextRepository,
-            CustomerRepository customerRepository,
+            UserRepository userRepository,
+            CustomerProfileRepository customerProfileRepository,
+            RoleRepository roleRepository,
             PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
-        this.customerRepository = customerRepository;
+        this.userRepository = userRepository;
+        this.customerProfileRepository = customerProfileRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
+    @Transactional
     public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest registerRequest,
             HttpServletRequest request,
             HttpServletResponse response) {
         String email = registerRequest.email().trim().toLowerCase();
 
-        if (customerRepository.existsByEmail(email)) {
+        if (userRepository.existsByLoginIdentifier(email)) {
             ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                     HttpStatus.CONFLICT,
                     "Email đã được sử dụng.");
@@ -69,12 +76,23 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
         }
 
-        CustomerEntity customer = new CustomerEntity(
+        RoleEntity customerRole = roleRepository
+                .findByCode(RoleEntity.CODE_CUSTOMER)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Thiếu role CUSTOMER."));
+
+        UserEntity user = new UserEntity(
                 email,
-                passwordEncoder.encode(registerRequest.password()));
+                passwordEncoder.encode(registerRequest.password()),
+                email,
+                UserEntity.STATUS_ACTIVE);
+        user.getRoles().add(customerRole);
 
         try {
-            customerRepository.saveAndFlush(customer);
+            userRepository.saveAndFlush(user);
+            customerProfileRepository.saveAndFlush(
+                    new CustomerProfileEntity(user));
         } catch (DataIntegrityViolationException exception) {
             ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                     HttpStatus.CONFLICT,

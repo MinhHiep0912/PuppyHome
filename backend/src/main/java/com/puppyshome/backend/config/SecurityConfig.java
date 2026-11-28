@@ -94,6 +94,20 @@ public class SecurityConfig {
                                 "/api/invitation-codes/*")
                         .hasAnyRole("CUSTOMER", "ADMIN")
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/tasks",
+                                "/api/tasks/**")
+                        .hasAnyRole("ADMIN", "EMPLOYEE")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/tasks/*/claim",
+                                "/api/tasks/*/release")
+                        .hasAnyRole("ADMIN", "EMPLOYEE")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/tasks/*/reassign")
+                        .hasRole("ADMIN")
+                        .requestMatchers(
                                 "/api/admin/employees",
                                 "/api/admin/employees/**")
                         .hasRole("ADMIN")

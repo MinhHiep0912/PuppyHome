@@ -1,5 +1,8 @@
 package com.puppyshome.backend.auth;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,10 +12,10 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 public class AccessContextResolver {
 
-    private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
 
-    public AccessContextResolver(CustomerRepository customerRepository) {
-        this.customerRepository = customerRepository;
+    public AccessContextResolver(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public boolean isAdmin(Authentication authentication) {
@@ -23,16 +26,15 @@ public class AccessContextResolver {
     }
 
     public AccessContext resolve(Authentication authentication) {
-        boolean admin = isAdmin(authentication);
-        if (admin) {
-            return new AccessContext(null, true);
-        }
-
-        CustomerEntity customer = customerRepository
-                .findByEmail(authentication.getName())
+        UserEntity user = userRepository
+                .findByLoginIdentifier(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Không tìm thấy Customer."));
-        return new AccessContext(customer.getId(), false);
+                        "Không tìm thấy người dùng."));
+        Set<String> roles = user.getRoles()
+                .stream()
+                .map(RoleEntity::getCode)
+                .collect(Collectors.toUnmodifiableSet());
+        return new AccessContext(user.getId(), roles);
     }
 }
