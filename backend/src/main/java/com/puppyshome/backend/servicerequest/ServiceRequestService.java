@@ -2,9 +2,8 @@ package com.puppyshome.backend.servicerequest;
 
 import com.puppyshome.backend.auth.AccessContext;
 import com.puppyshome.backend.auth.AccessContextResolver;
-import com.puppyshome.backend.auth.AdminRepository;
-import com.puppyshome.backend.auth.CustomerEntity;
-import com.puppyshome.backend.auth.CustomerRepository;
+import com.puppyshome.backend.auth.UserEntity;
+import com.puppyshome.backend.auth.UserRepository;
 import com.puppyshome.backend.gameaccount.GameAccountEntity;
 import com.puppyshome.backend.gameaccount.GameAccountRepository;
 import com.puppyshome.backend.service.ServiceEntity;
@@ -12,6 +11,7 @@ import com.puppyshome.backend.service.ServiceRepository;
 import com.puppyshome.backend.servicerequest.dto.ServiceRequestCreateRequest;
 import com.puppyshome.backend.servicerequest.dto.ServiceRequestResponse;
 import com.puppyshome.backend.servicerequest.dto.ServiceRequestStatusRequest;
+import com.puppyshome.backend.task.TaskService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.http.HttpStatus;
@@ -33,28 +33,28 @@ public class ServiceRequestService {
             ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final ServiceRequestRepository serviceRequestRepository;
-    private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
     private final GameAccountRepository gameAccountRepository;
     private final ServiceRepository serviceRepository;
-    private final AdminRepository adminRepository;
     private final AccessContextResolver accessContextResolver;
+    private final TaskService taskService;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public ServiceRequestService(
             ServiceRequestRepository serviceRequestRepository,
-            CustomerRepository customerRepository,
+            UserRepository userRepository,
             GameAccountRepository gameAccountRepository,
             ServiceRepository serviceRepository,
-            AdminRepository adminRepository,
-            AccessContextResolver accessContextResolver) {
+            AccessContextResolver accessContextResolver,
+            TaskService taskService) {
         this.serviceRequestRepository = serviceRequestRepository;
-        this.customerRepository = customerRepository;
+        this.userRepository = userRepository;
         this.gameAccountRepository = gameAccountRepository;
         this.serviceRepository = serviceRepository;
-        this.adminRepository = adminRepository;
         this.accessContextResolver = accessContextResolver;
+        this.taskService = taskService;
     }
 
     @Transactional(readOnly = true)
@@ -64,7 +64,7 @@ public class ServiceRequestService {
         List<ServiceRequestEntity> requests = context.admin()
                 ? serviceRequestRepository.findAllByOrderByIdAsc()
                 : serviceRequestRepository
-                        .findAllByCustomer_IdOrderByIdAsc(context.customerId());
+                        .findAllByCustomer_IdOrderByIdAsc(context.userId());
         return requests.stream().map(this::toResponse).toList();
     }
 
@@ -80,8 +80,8 @@ public class ServiceRequestService {
             Authentication authentication,
             ServiceRequestCreateRequest request) {
         AccessContext context = accessContextResolver.resolve(authentication);
-        CustomerEntity customer = customerRepository
-                .findById(context.customerId())
+        UserEntity customer = userRepository
+                .findById(context.userId())
                 .orElseThrow(() -> notFound("Không tìm thấy Customer."));
 
         GameAccountEntity account = gameAccountRepository
@@ -155,13 +155,14 @@ public class ServiceRequestService {
             throw conflict("INVALID_STATUS_TRANSITION");
         }
 
-        Long adminId = adminRepository
-                .findByUsername(authentication.getName())
-                .orElseThrow(() -> notFound("Không tìm thấy Admin."))
+        Long actorId = userRepository
+                .findByLoginIdentifier(authentication.getName())
+                .orElseThrow(() -> notFound("Không tìm thấy người dùng."))
                 .getId();
-        request.updateStatus(statusRequest.status(), "ADMIN", adminId);
+        request.updateStatus(statusRequest.status(), "ADMIN", actorId);
         serviceRequestRepository.saveAndFlush(request);
         entityManager.refresh(request);
+        taskService.syncFromServiceRequest(request);
         return toResponse(request);
     }
 
@@ -173,7 +174,7 @@ public class ServiceRequestService {
                         "Không tìm thấy Service Request."));
         AccessContext context = accessContextResolver.resolve(authentication);
         if (!context.admin()
-                && !request.getCustomerId().equals(context.customerId())) {
+                && !request.getCustomerId().equals(context.userId())) {
             throw notFound("Không tìm thấy Service Request.");
         }
         return request;
