@@ -14,5 +14,9 @@ public record EmployeeCreateRequest(
         String displayName,
 
         @Pattern(regexp = "ACTIVE|INACTIVE", message = "Trạng thái làm việc không hợp lệ.")
-        String workStatus) {
+        String workStatus,
+
+        @NotBlank(message = "Mật khẩu không được để trống.")
+        @Size(min = 8, max = 128, message = "Mật khẩu phải từ 8 đến 128 ký tự.")
+        String password) {
 }

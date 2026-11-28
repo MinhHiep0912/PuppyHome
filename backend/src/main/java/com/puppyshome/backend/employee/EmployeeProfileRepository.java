@@ -4,7 +4,10 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface EmployeeRepository extends JpaRepository<EmployeeEntity, Long> {
-    List<EmployeeEntity> findAllByOrderByIdAsc();
+public interface EmployeeProfileRepository
+        extends JpaRepository<EmployeeProfileEntity, Long> {
+
+    List<EmployeeProfileEntity> findAllByOrderByUser_IdAsc();
+
     boolean existsByEmployeeCode(String employeeCode);
 }

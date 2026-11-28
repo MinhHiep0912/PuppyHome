@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record EmployeeResponse(
         Long id,
+        String loginIdentifier,
         String employeeCode,
         String displayName,
         String workStatus,

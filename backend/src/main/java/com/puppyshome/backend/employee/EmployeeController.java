@@ -2,6 +2,7 @@ package com.puppyshome.backend.employee;
 
 import com.puppyshome.backend.employee.dto.EmployeeCreateRequest;
 import com.puppyshome.backend.employee.dto.EmployeeResponse;
+import com.puppyshome.backend.employee.dto.EmployeeUpdateRequest;
 
 import jakarta.validation.Valid;
 
@@ -12,7 +13,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,6 +46,13 @@ public class EmployeeController {
         return ResponseEntity
                 .created(URI.create("/api/admin/employees/" + employee.id()))
                 .body(employee);
+    }
+
+    @PutMapping("/{userId}")
+    public EmployeeResponse updateEmployee(
+            @PathVariable Long userId,
+            @Valid @RequestBody EmployeeUpdateRequest request) {
+        return employeeService.updateEmployee(userId, request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
